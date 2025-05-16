@@ -1,0 +1,39 @@
+# Task ID: 2
+# Title: Implement Quad Type Conversion Utilities
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create utilities for converting between Solidity's Quad fixed-point numbers and Python's Decimal type.
+# Details:
+Create a module `utils/quad.py` with the following functions:
+
+```python
+from decimal import Decimal
+
+QUAD_PRECISION = 18  # Number of decimal places in Quad type
+
+def decimal_to_quad(value: Decimal) -> int:
+    """Convert a Python Decimal to a Quad fixed-point integer representation"""
+    scaled = value * (10 ** QUAD_PRECISION)
+    return int(scaled)
+
+def quad_to_decimal(value: int) -> Decimal:
+    """Convert a Quad fixed-point integer to a Python Decimal"""
+    return Decimal(value) / (10 ** QUAD_PRECISION)
+
+def format_quad_for_display(value: int, decimals: int = 6) -> str:
+    """Format a Quad value for human-readable display with specified precision"""
+    decimal_value = quad_to_decimal(value)
+    return f"{decimal_value:.{decimals}f}"
+```
+
+Implement additional helper functions for Quad arithmetic operations that maintain precision.
+
+# Test Strategy:
+1. Write unit tests in `tests/test_quad.py` that verify:
+   - Conversion from Decimal to Quad and back preserves value
+   - Edge cases: very large numbers, very small numbers, zero
+   - Negative values
+   - Rounding behavior
+2. Test with known values from the Infinity Pools contract
+3. Verify precision is maintained through multiple operations

@@ -1,0 +1,117 @@
+# Task ID: 9
+# Title: Implement Event Subscription and Parsing
+# Status: pending
+# Dependencies: 4, 7
+# Priority: medium
+# Description: Create a system for subscribing to and parsing Infinity Pools contract events.
+# Details:
+Create `utils/events.py` with the following implementation:
+
+```python
+from typing import Dict, Any, List, Optional, Callable, Union
+from web3 import Web3
+from web3.contract import Contract
+from ..core.connector import InfinityPoolsConnector
+
+class EventSubscriber:
+    def __init__(self, connector: InfinityPoolsConnector, contract_name: str = 'InfinityPoolsPeriphery'):
+        self.connector = connector
+        self.w3 = connector.w3
+        self.contract = connector.get_contract(contract_name)
+        self._event_filters = {}
+        self._event_callbacks = {}
+    
+    def subscribe(self, event_name: str, callback: Callable[[Dict[str, Any]], None], 
+                 filter_params: Optional[Dict[str, Any]] = None) -> int:
+        """Subscribe to a contract event with optional filters"""
+        if not hasattr(self.contract.events, event_name):
+            raise ValueError(f"Event {event_name} not found in contract")
+        
+        event_obj = getattr(self.contract.events, event_name)
+        event_filter = event_obj.create_filter(fromBlock='latest', **filter_params or {})
+        
+        filter_id = id(event_filter)
+        self._event_filters[filter_id] = event_filter
+        self._event_callbacks[filter_id] = callback
+        
+        return filter_id
+    
+    def unsubscribe(self, filter_id: int) -> bool:
+        """Unsubscribe from an event"""
+        if filter_id in self._event_filters:
+            del self._event_filters[filter_id]
+            del self._event_callbacks[filter_id]
+            return True
+        return False
+    
+    def poll_events(self) -> int:
+        """Poll for new events and trigger callbacks"""
+        events_processed = 0
+        
+        for filter_id, event_filter in self._event_filters.items():
+            callback = self._event_callbacks[filter_id]
+            for event in event_filter.get_new_entries():
+                parsed_event = self._parse_event(event)
+                callback(parsed_event)
+                events_processed += 1
+        
+        return events_processed
+    
+    def get_past_events(self, event_name: str, from_block: Union[int, str], 
+                        to_block: Union[int, str] = 'latest', 
+                        filter_params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """Get past events within a block range"""
+        if not hasattr(self.contract.events, event_name):
+            raise ValueError(f"Event {event_name} not found in contract")
+        
+        event_obj = getattr(self.contract.events, event_name)
+        events = event_obj.get_logs(fromBlock=from_block, toBlock=to_block, **filter_params or {})
+        
+        return [self._parse_event(event) for event in events]
+    
+    def _parse_event(self, event) -> Dict[str, Any]:
+        """Parse a raw event into a more usable format"""
+        # Convert AttributeDict to regular dict
+        event_dict = dict(event)
+        
+        # Extract and format args
+        args = {}
+        if 'args' in event_dict:
+            args = dict(event_dict['args'])
+        
+        # Format the event data
+        return {
+            'event': event_dict.get('event'),
+            'address': event_dict.get('address'),
+            'block_number': event_dict.get('blockNumber'),
+            'transaction_hash': event_dict.get('transactionHash').hex() if event_dict.get('transactionHash') else None,
+            'log_index': event_dict.get('logIndex'),
+            'args': args
+        }
+
+# Event parser functions for specific events
+def parse_add_liquidity_event(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse AddLiquidity event into a more usable format"""
+    # This is a simplified version - actual implementation would need to
+    # format the event data based on the specific event structure
+    return event
+
+def parse_swap_event(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse Swap event into a more usable format"""
+    # This is a simplified version - actual implementation would need to
+    # format the event data based on the specific event structure
+    return event
+
+# Add more event parsers as needed
+```
+
+# Test Strategy:
+1. Write unit tests in `tests/test_events.py` that verify:
+   - Event subscription and callback handling
+   - Event filtering
+   - Past event retrieval
+   - Event parsing
+   - Unsubscribe functionality
+2. Test with mock events and real contract events
+3. Verify event data is correctly parsed and formatted
+4. Test with different filter parameters

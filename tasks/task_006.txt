@@ -1,0 +1,111 @@
+# Task ID: 6
+# Title: Implement Data Models for Contract Parameters
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Create Python classes representing Solidity structs used in the Infinity Pools protocol.
+# Details:
+Create `models/data_models.py` with the following classes:
+
+```python
+from dataclasses import dataclass
+from typing import List, Optional, Union, Dict, Any
+from decimal import Decimal
+from ..utils.quad import decimal_to_quad, quad_to_decimal
+
+@dataclass
+class AddLiquidityParams:
+    """Represents the AddLiquidityParams struct in the Infinity Pools contract"""
+    token0: str  # Address of token0
+    token1: str  # Address of token1
+    fee: int  # Fee tier (e.g., 500, 3000, 10000)
+    tickLower: int  # Lower tick boundary
+    tickUpper: int  # Upper tick boundary
+    amount0Desired: Decimal  # Desired amount of token0
+    amount1Desired: Decimal  # Desired amount of token1
+    amount0Min: Decimal  # Minimum amount of token0
+    amount1Min: Decimal  # Minimum amount of token1
+    recipient: str  # Address to receive the position NFT
+    deadline: int  # Transaction deadline timestamp
+    
+    def to_contract_tuple(self, token0_decimals: int = 18, token1_decimals: int = 18) -> tuple:
+        """Convert to tuple format expected by the contract"""
+        return (
+            self.token0,
+            self.token1,
+            self.fee,
+            self.tickLower,
+            self.tickUpper,
+            int(self.amount0Desired * (10 ** token0_decimals)),
+            int(self.amount1Desired * (10 ** token1_decimals)),
+            int(self.amount0Min * (10 ** token0_decimals)),
+            int(self.amount1Min * (10 ** token1_decimals)),
+            self.recipient,
+            self.deadline
+        )
+
+@dataclass
+class SwapInfo:
+    """Represents the SwapInfo struct in the Infinity Pools contract"""
+    tokenIn: str  # Address of input token
+    tokenOut: str  # Address of output token
+    fee: int  # Fee tier
+    recipient: str  # Address to receive output tokens
+    amountIn: Decimal  # Amount of input tokens
+    amountOutMinimum: Decimal  # Minimum amount of output tokens
+    sqrtPriceLimitX96: int  # Price limit for the swap
+    
+    def to_contract_tuple(self, token_in_decimals: int = 18) -> tuple:
+        """Convert to tuple format expected by the contract"""
+        return (
+            self.tokenIn,
+            self.tokenOut,
+            self.fee,
+            self.recipient,
+            int(self.amountIn * (10 ** token_in_decimals)),
+            int(self.amountOutMinimum),  # Already in wei
+            self.sqrtPriceLimitX96
+        )
+
+@dataclass
+class BatchActionsParams:
+    """Represents parameters for batch actions on swappers"""
+    swapperIds: List[int]  # List of swapper IDs
+    actions: List[int]  # List of actions to perform
+    data: List[bytes]  # Additional data for each action
+    
+    def to_contract_tuple(self) -> tuple:
+        """Convert to tuple format expected by the contract"""
+        return (
+            self.swapperIds,
+            self.actions,
+            self.data
+        )
+
+# Add more data models for other contract structs as needed
+```
+
+Also implement utility functions for encoding/decoding NFT position IDs:
+
+```python
+def encode_position_id(token0: str, token1: str, fee: int, tick_lower: int, tick_upper: int) -> int:
+    """Encode position parameters into a tokenId"""
+    # This is a simplified version - actual implementation would need to match the contract logic
+    # for encoding tokenIds
+    pass
+
+def decode_position_id(token_id: int) -> Dict[str, Any]:
+    """Decode a tokenId into its component parts"""
+    # This is a simplified version - actual implementation would need to match the contract logic
+    # for decoding tokenIds
+    pass
+```
+
+# Test Strategy:
+1. Write unit tests in `tests/test_data_models.py` that verify:
+   - Correct conversion between Python types and contract parameter formats
+   - Handling of different token decimals
+   - Edge cases (very large/small values)
+   - Encoding/decoding of position IDs
+2. Test with known values from the Infinity Pools contract
+3. Verify serialization/deserialization maintains data integrity

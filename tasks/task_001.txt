@@ -1,0 +1,28 @@
+# Task ID: 1
+# Title: Setup Project Structure and Dependencies
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Initialize the SDK project with proper structure, dependencies, and development tools.
+# Details:
+1. Create project directory structure:
+   - infinity_pools_sdk/
+     - __init__.py
+     - core/
+     - models/
+     - utils/
+     - erc/
+     - tests/
+2. Setup package configuration (setup.py, pyproject.toml)
+3. Configure development tools:
+   - pytest for testing
+4. Define dependencies using `uv add` (handled by user):
+   - web3>=7.11.1
+5. Setup CI configuration with GitHub Actions
+6. Create initial README.md with project overview
+
+# Test Strategy:
+Verify project structure is correctly set up by running:
+1. Installation test: `uv pip install -e .`
+2. Import test: `import infinity_pools_sdk`
+3. Ensure CI pipeline passes initial checks

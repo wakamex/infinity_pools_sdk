@@ -1,0 +1,104 @@
+# Task ID: 4
+# Title: Implement Core Connector Module
+# Status: pending
+# Dependencies: 3
+# Priority: high
+# Description: Create the core connector module that manages Web3.py connection and transaction signing.
+# Details:
+Create `core/connector.py` with the following components:
+
+```python
+from typing import Optional, Union, Dict, Any
+from web3 import Web3, HTTPProvider
+from web3.middleware import geth_poa_middleware
+from eth_account import Account
+from eth_account.signers.local import LocalAccount
+from ..utils.config import ContractConfig, NETWORKS
+
+class InfinityPoolsConnector:
+    def __init__(self, 
+                 rpc_url: Optional[str] = None,
+                 network: str = 'mainnet',
+                 private_key: Optional[str] = None):
+        """Initialize the connector with RPC URL and optional private key"""
+        self.network = network
+        self.config = ContractConfig(network)
+        
+        # Setup Web3 connection
+        if rpc_url is None:
+            rpc_url = self._get_default_rpc()
+        self.w3 = Web3(HTTPProvider(rpc_url))
+        
+        # Add middleware for POA networks if needed
+        if network in ['goerli', 'sepolia']:
+            self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        
+        # Setup account if private key provided
+        self.account: Optional[LocalAccount] = None
+        if private_key:
+            self.load_account(private_key)
+    
+    def _get_default_rpc(self) -> str:
+        """Get default RPC URL from environment variables"""
+        import os
+        env_var = f"INFINITY_POOLS_RPC_{self.network.upper()}"
+        rpc_url = os.environ.get(env_var)
+        if not rpc_url:
+            raise ValueError(f"No RPC URL provided and no {env_var} environment variable found")
+        return rpc_url
+    
+    def load_account(self, private_key: str) -> LocalAccount:
+        """Load an Ethereum account from a private key"""
+        if private_key.startswith('0x'):
+            private_key = private_key[2:]
+        self.account = Account.from_key(private_key)
+        return self.account
+    
+    def get_contract(self, contract_name: str):
+        """Get a contract instance by name"""
+        address = self.config.get_address(contract_name)
+        abi = self.config.get_abi(contract_name)
+        if not address or not abi:
+            raise ValueError(f"Contract {contract_name} not found in configuration")
+        return self.w3.eth.contract(address=address, abi=abi)
+    
+    def send_transaction(self, tx_params: Dict[str, Any]) -> str:
+        """Sign and send a transaction"""
+        if not self.account:
+            raise ValueError("No account loaded. Call load_account() first.")
+        
+        # Ensure gas parameters are set
+        if 'gas' not in tx_params:
+            tx_params['gas'] = self.w3.eth.estimate_gas(tx_params)
+        if 'gasPrice' not in tx_params and 'maxFeePerGas' not in tx_params:
+            tx_params['gasPrice'] = self.w3.eth.gas_price
+        
+        # Set nonce if not provided
+        if 'nonce' not in tx_params:
+            tx_params['nonce'] = self.w3.eth.get_transaction_count(self.account.address)
+        
+        # Sign transaction
+        signed_tx = self.account.sign_transaction(tx_params)
+        
+        # Send transaction
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        return tx_hash.hex()
+    
+    def wait_for_transaction(self, tx_hash: str, timeout: int = 120) -> Dict[str, Any]:
+        """Wait for a transaction to be mined and return the receipt"""
+        tx_hash_bytes = Web3.to_bytes(hexstr=tx_hash)
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash_bytes, timeout=timeout)
+        return dict(receipt)
+```
+
+Also implement a simplified version for read-only operations.
+
+# Test Strategy:
+1. Write unit tests in `tests/test_connector.py` that verify:
+   - Connection to different networks
+   - Account loading and address derivation
+   - Contract instance creation
+   - Transaction parameter preparation
+   - Mock transaction sending and receipt handling
+2. Use a local Ethereum node or mock provider for testing
+3. Test error handling for invalid inputs and network issues

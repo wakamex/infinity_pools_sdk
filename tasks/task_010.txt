@@ -1,0 +1,67 @@
+# Task ID: 10
+# Title: Create Documentation and Examples
+# Status: pending
+# Dependencies: 1, 2, 3, 4, 5, 6, 7, 8, 9
+# Priority: medium
+# Description: Develop comprehensive documentation and usage examples for the SDK.
+# Details:
+1. Create a comprehensive README.md with:
+   - Project overview and purpose
+   - Installation instructions
+   - Quick start guide
+   - Basic usage examples
+   - Link to full documentation
+
+2. Setup Sphinx documentation:
+   - Create `docs/` directory with Sphinx configuration
+   - Generate API reference documentation
+   - Write tutorial sections
+
+3. Create example scripts in `examples/` directory:
+   - Connection and setup example
+   - Adding liquidity example
+   - Swap and deposit example
+   - Event subscription example
+   - Error handling example
+
+4. Document each module with docstrings following Google style:
+
+```python
+def function_name(param1: type, param2: type) -> return_type:
+    """Short description of function.
+    
+    Longer description explaining the function's purpose, behavior,
+    and any important details.
+    
+    Args:
+        param1: Description of param1
+        param2: Description of param2
+        
+    Returns:
+        Description of return value
+        
+    Raises:
+        ExceptionType: Description of when this exception is raised
+    
+    Examples:
+        >>> function_name('example', 123)
+        'result'
+    """
+```
+
+5. Create a user guide covering:
+   - SDK architecture overview
+   - Common use cases and patterns
+   - Best practices
+   - Troubleshooting
+   - Advanced usage
+
+6. Generate and publish documentation to GitHub Pages or ReadTheDocs
+
+# Test Strategy:
+1. Verify documentation builds without errors
+2. Run example scripts to ensure they work as documented
+3. Review API reference for completeness
+4. Check docstring coverage with a tool like interrogate
+5. Have team members review documentation for clarity and accuracy
+6. Test documentation on different platforms (Windows, macOS, Linux)

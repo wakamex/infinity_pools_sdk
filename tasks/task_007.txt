@@ -1,0 +1,149 @@
+# Task ID: 7
+# Title: Implement Periphery Contract Wrapper
+# Status: pending
+# Dependencies: 4, 5, 6
+# Priority: high
+# Description: Create a wrapper module for the InfinityPoolsPeriphery contract with methods for key functions.
+# Details:
+Create `core/periphery.py` with the following implementation:
+
+```python
+from typing import Dict, Any, List, Optional, Union, Tuple
+from decimal import Decimal
+from web3.contract import Contract
+from ..core.connector import InfinityPoolsConnector
+from ..models.data_models import AddLiquidityParams, SwapInfo, BatchActionsParams
+from ..erc.erc20 import ERC20Helper
+
+class InfinityPoolsPeriphery:
+    def __init__(self, connector: InfinityPoolsConnector):
+        self.connector = connector
+        self.w3 = connector.w3
+        self.contract = self._get_periphery_contract()
+        self.erc20 = ERC20Helper(connector)
+    
+    def _get_periphery_contract(self) -> Contract:
+        """Get the InfinityPoolsPeriphery contract instance"""
+        return self.connector.get_contract('InfinityPoolsPeriphery')
+    
+    def get_pool_address(self, token0: str, token1: str, fee: int) -> str:
+        """Get the address of a pool for the given tokens and fee tier"""
+        # Ensure token0 < token1 by address value
+        if int(token0, 16) > int(token1, 16):
+            token0, token1 = token1, token0
+        
+        return self.contract.functions.getPoolAddress(token0, token1, fee).call()
+    
+    def add_liquidity(self, params: AddLiquidityParams) -> Dict[str, Any]:
+        """Add liquidity to a pool and receive an LP NFT"""
+        if not self.connector.account:
+            raise ValueError("No account loaded for transaction")
+        
+        # Get token decimals for amount conversion
+        token0_decimals = self.erc20.get_contract(params.token0).functions.decimals().call()
+        token1_decimals = self.erc20.get_contract(params.token1).functions.decimals().call()
+        
+        # Check and set approvals if needed
+        periphery_address = self.contract.address
+        
+        token0_allowance = self.erc20.allowance(
+            params.token0, 
+            self.connector.account.address, 
+            periphery_address
+        )
+        if token0_allowance < params.amount0Desired:
+            self.erc20.approve(params.token0, periphery_address, params.amount0Desired * 2)
+        
+        token1_allowance = self.erc20.allowance(
+            params.token1, 
+            self.connector.account.address, 
+            periphery_address
+        )
+        if token1_allowance < params.amount1Desired:
+            self.erc20.approve(params.token1, periphery_address, params.amount1Desired * 2)
+        
+        # Build and send transaction
+        tx_params = {
+            'from': self.connector.account.address,
+        }
+        
+        contract_params = params.to_contract_tuple(token0_decimals, token1_decimals)
+        tx = self.contract.functions.addLiquidity(contract_params).build_transaction(tx_params)
+        tx_hash = self.connector.send_transaction(tx)
+        
+        # Wait for transaction and parse result
+        receipt = self.connector.wait_for_transaction(tx_hash)
+        
+        # Parse events to get the tokenId of the minted position
+        # This is a simplified version - actual implementation would need to parse the events
+        # to extract the tokenId and other details
+        
+        return {
+            'tx_hash': tx_hash,
+            'receipt': receipt,
+            # 'token_id': token_id,  # Would be extracted from events
+            # Additional details from the transaction
+        }
+    
+    def swap_deposit(self, swap_info: SwapInfo) -> Dict[str, Any]:
+        """Perform a swap and deposit operation"""
+        if not self.connector.account:
+            raise ValueError("No account loaded for transaction")
+        
+        # Get token decimals for amount conversion
+        token_in_decimals = self.erc20.get_contract(swap_info.tokenIn).functions.decimals().call()
+        
+        # Check and set approvals if needed
+        periphery_address = self.contract.address
+        
+        token_in_allowance = self.erc20.allowance(
+            swap_info.tokenIn, 
+            self.connector.account.address, 
+            periphery_address
+        )
+        if token_in_allowance < swap_info.amountIn:
+            self.erc20.approve(swap_info.tokenIn, periphery_address, swap_info.amountIn * 2)
+        
+        # Build and send transaction
+        tx_params = {
+            'from': self.connector.account.address,
+        }
+        
+        contract_params = swap_info.to_contract_tuple(token_in_decimals)
+        tx = self.contract.functions.swapDeposit(contract_params).build_transaction(tx_params)
+        tx_hash = self.connector.send_transaction(tx)
+        
+        # Wait for transaction and parse result
+        receipt = self.connector.wait_for_transaction(tx_hash)
+        
+        # Parse events to get details about the swap
+        # This is a simplified version - actual implementation would need to parse the events
+        
+        return {
+            'tx_hash': tx_hash,
+            'receipt': receipt,
+            # Additional details from the transaction and events
+        }
+    
+    # Implement other periphery contract methods following the same pattern
+    # - newLoanWithSwap
+    # - batchActionsOnSwappers
+    # - reflow
+    # - collect
+    # - drain
+    # - tap
+    # etc.
+```
+
+# Test Strategy:
+1. Write unit tests in `tests/test_periphery.py` that verify:
+   - Pool address retrieval
+   - Liquidity addition parameter handling
+   - Swap deposit parameter handling
+   - Transaction building and sending
+   - Event parsing
+   - Error handling
+2. Use mock contracts for testing
+3. Test with real contract addresses on test networks
+4. Verify gas estimation and transaction building
+5. Test approval handling logic

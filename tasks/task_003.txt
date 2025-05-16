@@ -1,0 +1,80 @@
+# Task ID: 3
+# Title: Implement ABI and Address Configuration Management
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create a configuration system to manage contract ABIs and addresses across different networks.
+# Details:
+1. Create `utils/config.py` module with:
+
+```python
+import json
+import os
+from pathlib import Path
+from typing import Dict, Any, Optional
+
+NETWORKS = {
+    'mainnet': 1,
+    'goerli': 5,
+    'sepolia': 11155111,
+    'arbitrum': 42161,
+    'optimism': 10,
+    # Add other supported networks
+}
+
+class ContractConfig:
+    def __init__(self, network_name: str = 'mainnet'):
+        self.network_name = network_name
+        self.network_id = NETWORKS.get(network_name, 1)
+        self._load_addresses()
+        self._load_abis()
+    
+    def _load_addresses(self):
+        """Load contract addresses for the selected network"""
+        # Load from a JSON file or embedded dictionary
+        addresses_file = Path(__file__).parent.parent / 'data' / f'addresses_{self.network_name}.json'
+        if addresses_file.exists():
+            with open(addresses_file, 'r') as f:
+                self.addresses = json.load(f)
+        else:
+            # Fallback to embedded addresses
+            self.addresses = DEFAULT_ADDRESSES.get(self.network_name, {})
+    
+    def _load_abis(self):
+        """Load contract ABIs"""
+        self.abis = {}
+        abi_dir = Path(__file__).parent.parent / 'data' / 'abis'
+        for abi_file in abi_dir.glob('*.json'):
+            contract_name = abi_file.stem
+            with open(abi_file, 'r') as f:
+                self.abis[contract_name] = json.load(f)
+    
+    def get_address(self, contract_name: str) -> str:
+        """Get address for a specific contract"""
+        return self.addresses.get(contract_name, '')
+    
+    def get_abi(self, contract_name: str) -> list:
+        """Get ABI for a specific contract"""
+        return self.abis.get(contract_name, [])
+```
+
+2. Create a data directory structure:
+   - data/
+     - abis/
+       - InfinityPoolsPeriphery.json
+       - ERC20.json
+       - ERC721.json
+     - addresses_mainnet.json
+     - addresses_goerli.json
+     - etc.
+
+3. Implement functions to update configurations at runtime
+
+# Test Strategy:
+1. Write unit tests in `tests/test_config.py` that verify:
+   - Configuration loads correctly for different networks
+   - ABIs are properly parsed
+   - Contract addresses are correctly retrieved
+   - Error handling for missing contracts/networks
+2. Test with mock configuration files
+3. Verify configuration can be updated at runtime

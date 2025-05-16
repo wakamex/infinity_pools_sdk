@@ -1,0 +1,131 @@
+# Task ID: 5
+# Title: Implement ERC20 and ERC721 Helper Modules
+# Status: pending
+# Dependencies: 4
+# Priority: medium
+# Description: Create wrapper modules for common ERC20 and ERC721 token interactions.
+# Details:
+1. Create `erc/erc20.py` with the following:
+
+```python
+from decimal import Decimal
+from typing import Optional, Dict, Any
+from ..core.connector import InfinityPoolsConnector
+
+class ERC20Helper:
+    def __init__(self, connector: InfinityPoolsConnector):
+        self.connector = connector
+        self.w3 = connector.w3
+    
+    def get_contract(self, token_address: str):
+        """Get ERC20 contract instance for a specific token address"""
+        return self.w3.eth.contract(address=token_address, abi=self.connector.config.get_abi('ERC20'))
+    
+    def balance_of(self, token_address: str, address: Optional[str] = None) -> Decimal:
+        """Get token balance for an address (defaults to loaded account)"""
+        if address is None:
+            if not self.connector.account:
+                raise ValueError("No account loaded and no address provided")
+            address = self.connector.account.address
+        
+        contract = self.get_contract(token_address)
+        balance_wei = contract.functions.balanceOf(address).call()
+        decimals = contract.functions.decimals().call()
+        return Decimal(balance_wei) / (10 ** decimals)
+    
+    def approve(self, token_address: str, spender_address: str, amount: Decimal) -> str:
+        """Approve spender to use tokens"""
+        if not self.connector.account:
+            raise ValueError("No account loaded for transaction")
+        
+        contract = self.get_contract(token_address)
+        decimals = contract.functions.decimals().call()
+        amount_wei = int(amount * (10 ** decimals))
+        
+        tx_params = {
+            'from': self.connector.account.address,
+        }
+        
+        tx = contract.functions.approve(spender_address, amount_wei).build_transaction(tx_params)
+        return self.connector.send_transaction(tx)
+    
+    def allowance(self, token_address: str, owner_address: str, spender_address: str) -> Decimal:
+        """Check allowance for a spender"""
+        contract = self.get_contract(token_address)
+        allowance_wei = contract.functions.allowance(owner_address, spender_address).call()
+        decimals = contract.functions.decimals().call()
+        return Decimal(allowance_wei) / (10 ** decimals)
+```
+
+2. Create `erc/erc721.py` with similar functions for NFT operations:
+
+```python
+from typing import Optional, Dict, Any, List
+from ..core.connector import InfinityPoolsConnector
+
+class ERC721Helper:
+    def __init__(self, connector: InfinityPoolsConnector):
+        self.connector = connector
+        self.w3 = connector.w3
+    
+    def get_contract(self, nft_address: str):
+        """Get ERC721 contract instance for a specific NFT address"""
+        return self.w3.eth.contract(address=nft_address, abi=self.connector.config.get_abi('ERC721'))
+    
+    def owner_of(self, nft_address: str, token_id: int) -> str:
+        """Get owner of a specific NFT token"""
+        contract = self.get_contract(nft_address)
+        return contract.functions.ownerOf(token_id).call()
+    
+    def balance_of(self, nft_address: str, address: Optional[str] = None) -> int:
+        """Get number of NFTs owned by an address"""
+        if address is None:
+            if not self.connector.account:
+                raise ValueError("No account loaded and no address provided")
+            address = self.connector.account.address
+        
+        contract = self.get_contract(nft_address)
+        return contract.functions.balanceOf(address).call()
+    
+    def get_approved(self, nft_address: str, token_id: int) -> str:
+        """Get approved address for a token"""
+        contract = self.get_contract(nft_address)
+        return contract.functions.getApproved(token_id).call()
+    
+    def approve(self, nft_address: str, to_address: str, token_id: int) -> str:
+        """Approve address to transfer specific NFT"""
+        if not self.connector.account:
+            raise ValueError("No account loaded for transaction")
+        
+        contract = self.get_contract(nft_address)
+        tx_params = {
+            'from': self.connector.account.address,
+        }
+        
+        tx = contract.functions.approve(to_address, token_id).build_transaction(tx_params)
+        return self.connector.send_transaction(tx)
+    
+    def set_approval_for_all(self, nft_address: str, operator_address: str, approved: bool) -> str:
+        """Set or revoke approval for all NFTs"""
+        if not self.connector.account:
+            raise ValueError("No account loaded for transaction")
+        
+        contract = self.get_contract(nft_address)
+        tx_params = {
+            'from': self.connector.account.address,
+        }
+        
+        tx = contract.functions.setApprovalForAll(operator_address, approved).build_transaction(tx_params)
+        return self.connector.send_transaction(tx)
+```
+
+# Test Strategy:
+1. Write unit tests in `tests/test_erc20.py` and `tests/test_erc721.py` that verify:
+   - Token balance retrieval
+   - Approval functionality
+   - Allowance checking
+   - NFT ownership verification
+   - Error handling for invalid addresses
+2. Use mock contracts for testing
+3. Test with real token addresses on test networks
+4. Verify gas estimation and transaction building

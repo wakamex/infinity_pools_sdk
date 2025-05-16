@@ -1,0 +1,104 @@
+# Task ID: 8
+# Title: Implement Error Handling and Custom Exceptions
+# Status: pending
+# Dependencies: 4, 7
+# Priority: medium
+# Description: Create a robust error handling system that translates blockchain and contract errors into meaningful Python exceptions.
+# Details:
+Create `utils/errors.py` with the following implementation:
+
+```python
+from typing import Dict, Any, Optional
+import re
+
+class InfinityPoolsError(Exception):
+    """Base exception for all Infinity Pools SDK errors"""
+    pass
+
+class ConnectionError(InfinityPoolsError):
+    """Error connecting to Ethereum node"""
+    pass
+
+class TransactionError(InfinityPoolsError):
+    """Error during transaction execution"""
+    def __init__(self, message: str, tx_hash: Optional[str] = None, receipt: Optional[Dict[str, Any]] = None):
+        super().__init__(message)
+        self.tx_hash = tx_hash
+        self.receipt = receipt
+
+class ContractError(InfinityPoolsError):
+    """Error from contract execution"""
+    def __init__(self, message: str, error_data: Optional[str] = None):
+        super().__init__(message)
+        self.error_data = error_data
+        self.parsed_error = self._parse_error(error_data) if error_data else None
+    
+    def _parse_error(self, error_data: str) -> Dict[str, Any]:
+        """Parse contract error data into a more readable format"""
+        # This is a simplified version - actual implementation would need to
+        # decode the error data based on contract ABI and error signatures
+        return {'raw_data': error_data}
+
+class InsufficientLiquidityError(ContractError):
+    """Error when there is insufficient liquidity for an operation"""
+    pass
+
+class SlippageError(ContractError):
+    """Error when slippage tolerance is exceeded"""
+    pass
+
+class InvalidParameterError(InfinityPoolsError):
+    """Error when an invalid parameter is provided"""
+    pass
+
+# Error parser function
+def parse_web3_error(error) -> InfinityPoolsError:
+    """Parse Web3.py exceptions into SDK-specific exceptions"""
+    error_str = str(error)
+    
+    # Check for revert strings
+    revert_match = re.search(r"reverted: (.+)$", error_str)
+    if revert_match:
+        revert_reason = revert_match.group(1)
+        
+        # Map known revert reasons to specific exceptions
+        if "insufficient liquidity" in revert_reason.lower():
+            return InsufficientLiquidityError(revert_reason)
+        elif "slippage" in revert_reason.lower():
+            return SlippageError(revert_reason)
+        else:
+            return ContractError(revert_reason)
+    
+    # Check for connection issues
+    if "connection" in error_str.lower() or "network" in error_str.lower():
+        return ConnectionError(f"Connection error: {error_str}")
+    
+    # Default to generic error
+    return InfinityPoolsError(f"Unexpected error: {error_str}")
+
+# Function to wrap contract calls with error handling
+def handle_contract_call(func):
+    """Decorator to handle contract call errors"""
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            raise parse_web3_error(e)
+    return wrapper
+```
+
+Update the core modules to use this error handling system:
+
+1. Modify `core/connector.py` to catch and translate Web3 errors
+2. Update `core/periphery.py` to use the `handle_contract_call` decorator
+3. Add specific error handling for common contract errors
+
+# Test Strategy:
+1. Write unit tests in `tests/test_errors.py` that verify:
+   - Error translation from Web3 exceptions
+   - Custom exception hierarchy
+   - Error data parsing
+   - Decorator functionality
+2. Test with mock errors and real contract errors
+3. Verify error messages are user-friendly and actionable
+4. Test error handling in all core modules
