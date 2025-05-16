@@ -7,6 +7,7 @@ from web3.middleware import ExtraDataToPOAMiddleware  # Third-party
 
 from ..utils.config import NETWORKS, ContractConfig  # First-party
 
+
 class InfinityPoolsConnector:
     def __init__(self, 
                  rpc_url: Optional[str] = None,

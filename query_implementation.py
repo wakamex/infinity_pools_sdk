@@ -9,8 +9,8 @@ def load_env_vars(env_path=".env"):
     try:
         with open(env_path, "r", encoding="utf-8") as f:
             for line in f:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
+                stripped_line = line.strip()
+                if not stripped_line or stripped_line.startswith("#") or "=" not in stripped_line:
                     continue
                 key, value = line.split("=", 1)
                 key = key.strip()
@@ -71,7 +71,8 @@ def get_implementation_address(rpc_url: str, proxy_address: str, slot: str) -> s
     try:
         # eth_getStorageAt returns 32 bytes (64 hex characters + '0x')
         # The slot should also be a hex string; IMPLEMENTATION_SLOT is already defined as such.
-        storage_value_bytes = w3.eth.get_storage_at(checksummed_proxy_address, slot)
+        slot_as_int: int = int(slot, 16)
+        storage_value_bytes = w3.eth.get_storage_at(checksummed_proxy_address, slot_as_int)
 
         hex_value = w3.to_hex(storage_value_bytes)
 

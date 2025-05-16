@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from infinity_pools_sdk.utils.config import (ContractConfig,
-                                           DEFAULT_ADDRESSES, NETWORKS)
+from infinity_pools_sdk.utils.config import DEFAULT_ADDRESSES, NETWORKS, ContractConfig
+
 
 @pytest.fixture
 def mock_data_dir(tmp_path: Path) -> Path:
