@@ -33,7 +33,7 @@ lint.select = ["A", "D", "I", "N", "PL"]
 # PLR0913: Too many arguments to function call (X > 5)
 # PLR0915: Too many statements (X > 50)
 # PLR2004: Magic value used in comparison
-lint.ignore = ["A002", "D100", "D101", "D102", "D103", "D105", "D107", "D203", "D213", "D413", "D415", "D416", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR2004"]
+lint.ignore = ["A002", "D100", "D101", "D102", "D103", "D105", "D107", "D203", "D213", "D413", "D415", "D416", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR2004", "N803", "N815"]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 lint.fixable = ["A", "D", "I", "N", "PL"]

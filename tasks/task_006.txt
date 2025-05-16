@@ -1,6 +1,6 @@
 # Task ID: 6
 # Title: Implement Data Models for Contract Parameters
-# Status: pending
+# Status: done
 # Dependencies: 2
 # Priority: high
 # Description: Create Python classes representing Solidity structs used in the Infinity Pools protocol.
