@@ -26,6 +26,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e .[test]
 
+    - name: Lint with ruff
+      uses: astral-sh/ruff-action@v3
+      with:
+        args: check --fix
+
+    - name: Format with ruff
+      run: ruff format
+
     - name: Run tests
       run: |
         pytest
