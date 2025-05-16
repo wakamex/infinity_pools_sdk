@@ -28,6 +28,8 @@ lint.select = ["A", "D", "I", "N", "PL"]
 # D413: Missing blank line after last section
 # D415: First line should end with a period, question mark, or exclamation point (in period-only D400)
 # D416: section-name-ends-in-colon (numpy style guide doesn't use colons after sections, i.e. Parameters)
+# N803: invalid-argument-name
+# N815: mixed-case-variable-in-class-scope
 # PLR0911: Too many return statements (X > 6)
 # PLR0912: Too many branches (X > 12)
 # PLR0913: Too many arguments to function call (X > 5)
