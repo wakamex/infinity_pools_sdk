@@ -1,22 +1,157 @@
 # Task ID: 7
-# Title: Implement Periphery Contract Wrapper
+# Title: Implement High-Level SDK for User Interactions
 # Status: pending
 # Dependencies: 4, 5, 6
 # Priority: high
-# Description: Create a wrapper module for the InfinityPoolsPeriphery contract with methods for key functions.
+# Description: Create a user-friendly SDK class (`InfinityPoolsSDK` in `infinity_pools_sdk/sdk.py`) that provides high-level methods for common Infinity Pools protocol operations. This class will abstract away direct contract calls and data complexities, simplifying integration for developers.
 # Details:
-Create `core/periphery.py` with the following implementation:
+Create `infinity_pools_sdk/sdk.py` with the following implementation:
 
 ```python
 from typing import Dict, Any, List, Optional, Union, Tuple
 from decimal import Decimal
 from web3.contract import Contract
-from ..core.connector import InfinityPoolsConnector
+from .core.connector import ContractConnector
+from .models.data_models import AddLiquidityParams, SwapInfo, BatchActionsParams
+from .erc.erc20 import ERC20Helper
+from .core.periphery import InfinityPoolsPeriphery
+
+class InfinityPoolsSDK:
+    def __init__(self, connector: ContractConnector):
+        self.connector = connector
+        self.w3 = connector.w3
+        self.periphery = InfinityPoolsPeriphery(connector)
+        self.erc20 = ERC20Helper(connector)
+    
+    def get_pool_address(self, token0: str, token1: str, fee: int) -> str:
+        """Get the address of a pool for the given tokens and fee tier"""
+        return self.periphery.get_pool_address(token0, token1, fee)
+    
+    def get_pool_details(self, token0: str, token1: str, fee: int) -> Dict[str, Any]:
+        """Get detailed information about a specific pool"""
+        pool_address = self.get_pool_address(token0, token1, fee)
+        # Fetch pool details like liquidity, current price, etc.
+        # This would involve calling various view functions on the pool contract
+        return {
+            'address': pool_address,
+            # Additional pool details would be added here
+        }
+    
+    def get_user_positions(self, user_address: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get all liquidity positions owned by the user"""
+        if not user_address and not self.connector.account:
+            raise ValueError("No user address provided and no account loaded")
+        
+        address = user_address or self.connector.account.address
+        # Fetch positions from the contract
+        # This would involve querying the NFT contract for tokens owned by the user
+        # and then getting details for each position
+        
+        return []
+    
+    def add_liquidity(self, 
+                      token0: str, 
+                      token1: str, 
+                      fee: int,
+                      amount0: Decimal,
+                      amount1: Decimal,
+                      slippage_tolerance: Decimal = Decimal('0.01'),
+                      recipient: Optional[str] = None,
+                      deadline: Optional[int] = None) -> Dict[str, Any]:
+        """Add liquidity to a pool and receive an LP NFT"""
+        if not self.connector.account:
+            raise ValueError("No account loaded for transaction")
+        
+        # Ensure token0 < token1 by address value
+        if int(token0, 16) > int(token1, 16):
+            token0, token1 = token1, token0
+            amount0, amount1 = amount1, amount0
+        
+        # Create AddLiquidityParams object
+        params = AddLiquidityParams(
+            token0=token0,
+            token1=token1,
+            fee=fee,
+            amount0Desired=amount0,
+            amount1Desired=amount1,
+            amount0Min=amount0 * (1 - slippage_tolerance),
+            amount1Min=amount1 * (1 - slippage_tolerance),
+            recipient=recipient or self.connector.account.address,
+            deadline=deadline or (self.w3.eth.get_block('latest').timestamp + 1200)  # 20 minutes from now
+        )
+        
+        # Call periphery contract
+        return self.periphery.add_liquidity(params)
+    
+    def remove_liquidity(self, 
+                         token_id: int,
+                         liquidity_percentage: Decimal = Decimal('1'),
+                         recipient: Optional[str] = None,
+                         deadline: Optional[int] = None) -> Dict[str, Any]:
+        """Remove liquidity from a position"""
+        if not self.connector.account:
+            raise ValueError("No account loaded for transaction")
+        
+        # Implementation would call the appropriate periphery contract method
+        # to remove liquidity from the position
+        
+        return {}
+    
+    def collect_fees(self, 
+                    token_id: int,
+                    recipient: Optional[str] = None) -> Dict[str, Any]:
+        """Collect accumulated fees from a position"""
+        if not self.connector.account:
+            raise ValueError("No account loaded for transaction")
+        
+        # Implementation would call the appropriate periphery contract method
+        # to collect fees from the position
+        
+        return {}
+    
+    def swap_exact_input(self,
+                         token_in: str,
+                         token_out: str,
+                         amount_in: Decimal,
+                         min_amount_out: Optional[Decimal] = None,
+                         recipient: Optional[str] = None,
+                         deadline: Optional[int] = None) -> Dict[str, Any]:
+        """Swap an exact amount of input tokens for a minimum amount of output tokens"""
+        if not self.connector.account:
+            raise ValueError("No account loaded for transaction")
+        
+        # Create SwapInfo object
+        swap_info = SwapInfo(
+            tokenIn=token_in,
+            tokenOut=token_out,
+            amountIn=amount_in,
+            amountOutMinimum=min_amount_out or Decimal('0'),  # Default to 0 if not specified
+            recipient=recipient or self.connector.account.address,
+            deadline=deadline or (self.w3.eth.get_block('latest').timestamp + 1200)  # 20 minutes from now
+        )
+        
+        # Call periphery contract
+        return self.periphery.swap_deposit(swap_info)
+    
+    # Additional methods for other protocol operations would be implemented here
+    # - borrow
+    # - repay
+    # - reflow
+    # - etc.
+```
+
+Also create `infinity_pools_sdk/core/periphery.py` with the following implementation:
+
+```python
+from typing import Dict, Any, List, Optional, Union, Tuple
+from decimal import Decimal
+from web3.contract import Contract
+from .connector import ContractConnector
 from ..models.data_models import AddLiquidityParams, SwapInfo, BatchActionsParams
 from ..erc.erc20 import ERC20Helper
 
 class InfinityPoolsPeriphery:
-    def __init__(self, connector: InfinityPoolsConnector):
+    def __init__(self, connector: ContractConnector):
         self.connector = connector
         self.w3 = connector.w3
         self.contract = self._get_periphery_contract()
@@ -136,14 +271,20 @@ class InfinityPoolsPeriphery:
 ```
 
 # Test Strategy:
-1. Write unit tests in `tests/test_periphery.py` that verify:
-   - Pool address retrieval
-   - Liquidity addition parameter handling
-   - Swap deposit parameter handling
-   - Transaction building and sending
-   - Event parsing
-   - Error handling
-2. Use mock contracts for testing
-3. Test with real contract addresses on test networks
-4. Verify gas estimation and transaction building
-5. Test approval handling logic
+1. Write unit tests in `tests/test_sdk.py` that verify:
+   - SDK initialization and configuration
+   - Parameter preparation for contract calls
+   - Interaction with mocked `ContractConnector`
+   - Return value handling
+   - ERC20 approval management
+   - Error handling and validation
+2. Test each high-level method:
+   - `add_liquidity`
+   - `remove_liquidity`
+   - `collect_fees`
+   - `swap_exact_input`
+   - `get_pool_details`
+   - `get_user_positions`
+3. Use mock objects for the `ContractConnector` and contract instances
+4. Test parameter validation and error cases
+5. Integration tests on a testnet can be a secondary step
