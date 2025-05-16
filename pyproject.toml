@@ -45,3 +45,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Assume Python 3.12
 target-version = "py312"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+]
+
