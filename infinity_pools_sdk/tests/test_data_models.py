@@ -25,7 +25,8 @@ def test_add_liquidity_params_to_contract_tuple():
         amount0Min=Decimal("1.2"),
         amount1Min=Decimal("499"),
         recipient="0xRecipientAddress",
-        deadline=1234567890
+        deadline=1234567890,
+        earnEra=1  # Added earnEra
     )
 
     # Test with 18 decimals for token0 and 6 decimals for token1
@@ -47,7 +48,8 @@ def test_add_liquidity_params_to_contract_tuple():
         expected_amount0_min_wei,
         expected_amount1_min_wei,
         "0xRecipientAddress",
-        1234567890
+        1234567890,
+        1  # Added earnEra
     )
 
     assert params.to_contract_tuple(token0_decimals, token1_decimals) == expected_tuple
@@ -69,7 +71,8 @@ def test_add_liquidity_params_to_contract_tuple():
         default_expected_amount0_min_wei,
         default_expected_amount1_min_wei,
         "0xRecipientAddress",
-        1234567890
+        1234567890,
+        1  # Added earnEra
     )
     assert params.to_contract_tuple() == default_expected_tuple
 

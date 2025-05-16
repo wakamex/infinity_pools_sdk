@@ -18,6 +18,7 @@ class AddLiquidityParams:
     amount1Min: Decimal  # Minimum amount of token1
     recipient: str  # Address to receive the position NFT
     deadline: int  # Transaction deadline timestamp
+    earnEra: int = 0  # Era from which liquidity starts earning fees
     
     def to_contract_tuple(self, token0_decimals: int = 18, token1_decimals: int = 18) -> tuple:
         """Convert to tuple format expected by the contract."""
@@ -32,7 +33,8 @@ class AddLiquidityParams:
             int(self.amount0Min * (10 ** token0_decimals)),       # convert Decimal to int wei
             int(self.amount1Min * (10 ** token1_decimals)),       # convert Decimal to int wei
             self.recipient,
-            self.deadline
+            self.deadline,
+            self.earnEra
         )
 
 @dataclass
