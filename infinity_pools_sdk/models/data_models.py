@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 
 @dataclass
@@ -36,6 +36,24 @@ class AddLiquidityParams:
             self.deadline,
             self.earnEra
         )
+
+
+@dataclass
+class RemoveLiquidityParams:
+    """Represents the parameters for removing liquidity (draining a position)."""
+
+    token_id: int  # The ID of the LP NFT
+    recipient: str  # Address to receive the withdrawn tokens
+    deadline: int  # Transaction deadline as a Unix timestamp
+
+    def to_contract_tuple(self) -> Tuple[int, str, int]:
+        """Convert to tuple format expected by the contract if deadline is included."""
+        return (
+            self.token_id,
+            self.recipient,
+            self.deadline
+        )
+
 
 @dataclass
 class SwapInfo:

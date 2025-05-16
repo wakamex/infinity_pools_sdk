@@ -12,15 +12,34 @@ class InfinityPoolsConnector:
     def __init__(self, 
                  rpc_url: Optional[str] = None,
                  network: str = 'mainnet',
-                 private_key: Optional[str] = None):
-        """Initialize the connector with RPC URL and optional private key."""
+                 private_key: Optional[str] = None,
+                 headers: Optional[Dict[str, str]] = None):
+        """Initialize the connector with RPC URL and optional private key.
+        
+        Args:
+            rpc_url: The RPC URL to connect to. If None, uses environment variables.
+            network: The network to connect to (e.g., 'mainnet', 'goerli').
+            private_key: Optional private key for signing transactions.
+            headers: Optional HTTP headers to include in RPC requests, useful for Tenderly impersonation.
+        """
         self.network = network
         self.config = ContractConfig(network)
         
         # Setup Web3 connection
         if rpc_url is None:
             rpc_url = self._get_default_rpc()
-        self.w3 = Web3(HTTPProvider(rpc_url))
+            
+        # Create HTTP provider with optional headers
+        if headers:
+            provider = HTTPProvider(rpc_url, request_kwargs={"headers": headers})
+        else:
+            provider = HTTPProvider(rpc_url)
+            
+        self.w3 = Web3(provider)
+        
+        # Store impersonation info if provided
+        self.impersonated_address = headers.get("X-Tenderly-Force-Root-Account") if headers else None
+        
         # Inject POA middleware if a common POA network is detected or if URL suggests it
         if self.network.lower() in ['polygon', 'mumbai', 'bsc', 'goerli', 'sepolia'] or \
            any(keyword in rpc_url.lower() for keyword in ['matic', 'bsc', 'bnb', 'poa', 'ankr']):
@@ -60,29 +79,52 @@ class InfinityPoolsConnector:
         return self.w3.eth.contract(address=address, abi=abi)
     
     def send_transaction(self, tx_params: Dict[str, Any]) -> str:
-        """Sign and send a transaction."""
-        if not self.account:
-            raise ValueError("No account loaded. Call load_account() first.")
+        """Sign and send a transaction.
         
-        # Ensure gas parameters are set
-        if 'gas' not in tx_params:
-            # For 'gas', we need a from address if not already in tx_params
-            if 'from' not in tx_params and self.account:
-                 tx_params['from'] = self.account.address
-            tx_params['gas'] = self.w3.eth.estimate_gas(tx_params)
-        if 'gasPrice' not in tx_params and 'maxFeePerGas' not in tx_params:
-            tx_params['gasPrice'] = self.w3.eth.gas_price
-        
-        # Set nonce if not provided
-        if 'nonce' not in tx_params:
-            tx_params['nonce'] = self.w3.eth.get_transaction_count(self.account.address)
-        
-        # Sign transaction
-        signed_tx = self.account.sign_transaction(tx_params)
-        
-        # Send transaction
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        return "0x" + tx_hash.hex()
+        If using an impersonated account with Tenderly, this will send the transaction
+        directly without signing it (Tenderly handles the impersonation).
+        """
+        # Handle differently based on whether we're using impersonation or a local account
+        if self.impersonated_address:
+            # When using impersonation, we don't need to sign the transaction
+            # Tenderly will handle that for us
+            
+            # Make sure the 'from' address is set to the impersonated address
+            tx_params['from'] = self.impersonated_address
+            
+            # Ensure gas parameters are set
+            if 'gas' not in tx_params:
+                tx_params['gas'] = self.w3.eth.estimate_gas(tx_params)
+            if 'gasPrice' not in tx_params and 'maxFeePerGas' not in tx_params:
+                tx_params['gasPrice'] = self.w3.eth.gas_price
+            
+            # Send the transaction directly (no signing needed with impersonation)
+            tx_hash = self.w3.eth.send_transaction(tx_params)
+            return tx_hash.hex()
+        else:
+            # Standard flow using a local account with private key
+            if not self.account:
+                raise ValueError("No account loaded and no impersonation configured. Call load_account() first.")
+            
+            # Ensure gas parameters are set
+            if 'gas' not in tx_params:
+                # For 'gas', we need a from address if not already in tx_params
+                if 'from' not in tx_params and self.account:
+                    tx_params['from'] = self.account.address
+                tx_params['gas'] = self.w3.eth.estimate_gas(tx_params)
+            if 'gasPrice' not in tx_params and 'maxFeePerGas' not in tx_params:
+                tx_params['gasPrice'] = self.w3.eth.gas_price
+            
+            # Set nonce if not provided
+            if 'nonce' not in tx_params:
+                tx_params['nonce'] = self.w3.eth.get_transaction_count(self.account.address)
+            
+            # Sign transaction
+            signed_tx = self.account.sign_transaction(tx_params)
+            
+            # Send transaction
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            return "0x" + tx_hash.hex()
     
     def wait_for_transaction(self, tx_hash: str, timeout: int = 120) -> Dict[str, Any]:
         """Wait for a transaction to be mined and return the receipt."""
