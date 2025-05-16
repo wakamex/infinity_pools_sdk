@@ -1,0 +1,11 @@
+# Task ID: 13
+# Title: SDK: Implement swap_exact_input function
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Implement the 'swap_exact_input' function in InfinityPoolsSDK. Allows users to swap a known amount of an input token for an output token. Requires ABI definition, SDK method implementation, data model updates (if any), and unit tests.
+# Details:
+
+
+# Test Strategy:
+

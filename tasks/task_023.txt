@@ -1,0 +1,11 @@
+# Task ID: 23
+# Title: SDK: Implement get_pool_info function
+# Status: pending
+# Dependencies: 17
+# Priority: high
+# Description: Implement 'get_pool_info' in InfinityPoolsSDK. Allows querying info about a liquidity pool (e.g., reserves, price, tick). Requires ABI definition/contract interaction logic for read-only calls, SDK method, data models, and tests.
+# Details:
+
+
+# Test Strategy:
+

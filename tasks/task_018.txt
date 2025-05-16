@@ -1,0 +1,11 @@
+# Task ID: 18
+# Title: SDK: Implement remove_liquidity function
+# Status: pending
+# Dependencies: 17
+# Priority: high
+# Description: Implement the 'remove_liquidity' function in InfinityPoolsSDK. This allows users to withdraw their liquidity and claim accrued fees. Requires ABI definition, SDK method implementation, data model updates (if any), and unit tests.
+# Details:
+
+
+# Test Strategy:
+

@@ -1,0 +1,11 @@
+# Task ID: 12
+# Title: SDK: Implement collect_fees function
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Implement the 'collect_fees' function in InfinityPoolsSDK. This allows users to claim earned fees from their LP positions without removing the underlying liquidity. Requires ABI definition, SDK method implementation, and unit tests.
+# Details:
+
+
+# Test Strategy:
+

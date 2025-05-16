@@ -1,0 +1,11 @@
+# Task ID: 15
+# Title: SDK: Implement get_position_details function
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Implement 'get_position_details' in InfinityPoolsSDK. Allows users to query details of their liquidity positions (e.g., by NFT ID). Requires ABI definition/contract interaction logic for read-only calls, SDK method, data models, and tests.
+# Details:
+
+
+# Test Strategy:
+

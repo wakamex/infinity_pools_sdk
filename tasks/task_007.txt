@@ -288,3 +288,47 @@ class InfinityPoolsPeriphery:
 3. Use mock objects for the `ContractConnector` and contract instances
 4. Test parameter validation and error cases
 5. Integration tests on a testnet can be a secondary step
+
+# Subtasks:
+## 1. SDK: Implement remove_liquidity function [pending]
+### Dependencies: None
+### Description: Implement the 'remove_liquidity' function in InfinityPoolsSDK. This allows users to withdraw their liquidity and claim accrued fees. Requires ABI definition, SDK method implementation, data model updates (if any), and unit tests.
+### Details:
+
+
+## 2. SDK: Implement collect_fees function [pending]
+### Dependencies: None
+### Description: Implement the 'collect_fees' function in InfinityPoolsSDK. This allows users to claim earned fees from their LP positions without removing the underlying liquidity. Requires ABI definition, SDK method implementation, and unit tests.
+### Details:
+
+
+## 3. SDK: Implement swap_exact_input function [pending]
+### Dependencies: None
+### Description: Implement the 'swap_exact_input' function in InfinityPoolsSDK. Allows users to swap a known amount of an input token for an output token. Requires ABI definition, SDK method implementation, data model updates (if any), and unit tests.
+### Details:
+
+
+## 4. SDK: Implement swap_exact_output function [pending]
+### Dependencies: None
+### Description: Implement the 'swap_exact_output' function in InfinityPoolsSDK. Allows users to swap an input token for a known amount of an output token. Requires ABI definition, SDK method implementation, data model updates (if any), and unit tests.
+### Details:
+
+
+## 5. SDK: Implement get_position_details function [pending]
+### Dependencies: None
+### Description: Implement 'get_position_details' in InfinityPoolsSDK. Allows users to query details of their liquidity positions (e.g., by NFT ID). Requires ABI definition/contract interaction logic for read-only calls, SDK method, data models, and tests.
+### Details:
+
+
+## 6. SDK: Implement get_pool_info function [pending]
+### Dependencies: None
+### Description: Implement 'get_pool_info' in InfinityPoolsSDK. Allows querying info about a liquidity pool (e.g., reserves, price, tick). Requires ABI definition/contract interaction logic for read-only calls, SDK method, data models, and tests.
+### Details:
+
+
+## 7. SDK: Implement function to create Swapper/Leveraged Positions (e.g., shorts) [pending]
+### Dependencies: None
+### Description: Implement an SDK function to create new 'Swapper' positions (leveraged positions like shorts). This involves: 1. Defining a Python data model for `NewLoanParams`. 2. Creating logic to translate user-friendly inputs (e.g., collateral, asset to short, leverage) into the complex `NewLoanParams` struct. 3. Identifying and interacting with the correct periphery contract function (likely involving `NewLoan.sol`'s `newLoan` logic). 4. Handling collateral token approvals. 5. Writing comprehensive unit tests.
+### Details:
+The function should abstract the complexity of the `NewLoanParams` struct (fields: `owedPotential`, `startBin`, `strikeBin`, `tokenMix`, `lockinEnd`, `deadEra`, `token`, `twapUntil`) and derive them from simpler user inputs. Refer to `CONTRACT_DETAILS.md` around lines 703-712 for `NewLoanParams` fields. The transaction input data suggests a function selector `0x10c59026` is involved.
+
