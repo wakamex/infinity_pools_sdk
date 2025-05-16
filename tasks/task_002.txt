@@ -1,6 +1,6 @@
 # Task ID: 2
 # Title: Implement Quad Type Conversion Utilities
-# Status: pending
+# Status: done
 # Dependencies: 1
 # Priority: high
 # Description: Create utilities for converting between Solidity's Quad fixed-point numbers and Python's Decimal type.
