@@ -32,7 +32,7 @@ class ERC20Helper:
             if not self.connector.account:
                 raise ValueError("No account loaded and no owner_address provided for allowance check")
             owner_address = self.connector.account.address
-        
+
         if spender_address is None:
             # This usually doesn't make sense without a spender to check against.
             # Depending on the protocol, the 'spender' might be a specific contract (e.g., router).
@@ -106,6 +106,59 @@ class ERC20Helper:
         """Get the decimals of the token."""
         contract = self.get_contract(token_address)
         return contract.functions.decimals().call()
+
+    @staticmethod
+    def decimal_to_wei(amount_decimal: Decimal, num_decimals: int) -> int:
+        """Convert a Decimal token amount to its smallest unit (wei/atomic).
+
+        Args:
+            amount_decimal: The amount in Decimal format.
+            num_decimals: The number of decimals the token uses.
+
+        Returns:
+            The amount in its smallest unit (integer).
+        """
+        if amount_decimal < Decimal(0):
+            raise ValueError("Amount cannot be negative.")
+        return int(amount_decimal * (10 ** num_decimals))
+
+    def ensure_allowance(
+        self,
+        token_address: str,
+        spender_address: str,
+        required_amount_decimal: Decimal,
+        owner_address: Optional[str] = None,
+        approve_multiplier: Decimal = Decimal("1.5") # Optional: approve slightly more to avoid re-approving for minor dust
+    ) -> Optional[str]:
+        """Ensure that the spender has sufficient allowance from the owner.
+
+        If allowance is insufficient, it attempts to approve an amount equal to
+        required_amount_decimal * approve_multiplier.
+
+        Args:
+            token_address: The ERC20 token contract address.
+            spender_address: The address of the contract/account that needs the allowance.
+            required_amount_decimal: The minimum required allowance amount in Decimal format.
+            owner_address: The address of the token owner. Defaults to the loaded account.
+            approve_multiplier: Factor by which to multiply required_amount if approval is needed.
+
+        Returns:
+            The transaction hash if an approval was sent, otherwise None.
+        """
+        if owner_address is None:
+            if not self.connector.account:
+                raise ValueError("No account loaded and no owner_address provided for ensure_allowance")
+            owner_address = self.connector.account.address
+
+        current_allowance_decimal = self.allowance(token_address, owner_address, spender_address)
+
+        if current_allowance_decimal < required_amount_decimal:
+            amount_to_approve = required_amount_decimal * approve_multiplier
+            print( # For debugging purposes, can be removed or made a log
+                f"Approving {amount_to_approve} of token {token_address} for spender {spender_address} from owner {owner_address}"
+            )
+            return self.approve(token_address, spender_address, amount_to_approve)
+        return None
 
     def total_supply(self, token_address: str) -> Decimal:
         """Get the total supply of the token."""
