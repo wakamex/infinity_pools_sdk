@@ -436,11 +436,17 @@ name = "infinitypoolssdk"
 version = "0.0.1"
 source = { virtual = "." }
 dependencies = [
+    { name = "eth-typing" },
+    { name = "eth-utils" },
     { name = "web3" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "web3", specifier = ">=7.11.1" }]
+requires-dist = [
+    { name = "eth-typing", specifier = ">=5.2.1" },
+    { name = "eth-utils", specifier = ">=5.3.0" },
+    { name = "web3", specifier = ">=7.11.1" },
+]
 
 [[package]]
 name = "multidict"

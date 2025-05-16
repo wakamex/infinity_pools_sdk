@@ -1,0 +1,78 @@
+<context>
+# Overview  
+This document outlines the requirements for a Python Software Development Kit (SDK) for the Infinity Pools DeFi protocol. It solves the problem of complex direct smart contract interaction by providing a high-level, intuitive interface. The SDK is for Python developers, including DeFi application builders, bot developers, liquidity managers, data analysts, and technical traders. It's valuable because it simplifies integration, improves developer experience, and promotes robust interaction with the Infinity Pools protocol, primarily via the InfinityPoolsPeriphery.sol contract.
+
+# Core Features  
+- Connection Management: Enables connection to Ethereum nodes and network configuration. Important for establishing communication with the blockchain.
+- Contract Interaction Wrappers: Simplifies calling InfinityPoolsPeriphery functions like addLiquidity, swapDeposit, newLoanWithSwap, batchActionsOnSwappers, and various getters. Key for abstracting ABI complexities.
+- Position & ID Management: Utilities to encode/decode NFT position tokenIds (e.g., encodeId). Crucial for identifying and managing user positions.
+- Data Handling: Pythonic classes for complex parameters (AddLiquidityParams, SwapInfo) and Quad fixed-point type conversion. Essential for correct data formatting.
+- Error Handling: Translates blockchain and custom contract errors into Python exceptions. Vital for building resilient applications.
+- Event Subscription: Allows listening to and decoding smart contract events. Important for reactive applications and state tracking.
+- Configuration: Manages contract addresses, RPC endpoints, and gas settings. Necessary for adapting to different environments.
+- ERC20/NFT Helpers: Standard interactions with ERC20 tokens and ERC721 position NFTs (approve, balanceOf, ownerOf). Facilitates token and NFT management.
+
+# User Experience  
+- Developer Personas: DeFi App Devs, Arbitrage Bot Devs, Liquidity Managers, Analysts, Technical Traders.
+- Key Developer Flows: 
+  1. Setup & Configuration: Initialize SDK, connect to a node, load account.
+  2. Liquidity Provision: Prepare AddLiquidityParams, call addLiquidity, receive LP NFT tokenId.
+  3. Swap & Deposit: Prepare SwapInfo, call swapDeposit, check internal collateral.
+  4. Position Query: Use tokenId to query NFT details or related pool states.
+- DX Considerations: Pythonic API design, comprehensive and clear documentation (API reference, tutorials), easy-to-diagnose errors, straightforward installation and setup.
+</context>
+<PRD>
+# Technical Architecture  
+- System Components: 
+  - Core Connector: Manages Web3.py connection, transaction signing.
+  - Periphery Wrapper: Module with functions mapping to InfinityPoolsPeriphery.sol methods.
+  - Data Models: Python classes for contract call parameters (e.g., AddLiquidityParams).
+  - Utilities: Quad type conversion, ABI/address management, event decoders.
+  - ERC Helpers: Wrappers for common ERC20/ERC721 interactions.
+- Data Models: Python classes representing Solidity structs (AddLiquidityParams, SwapInfo, BatchActionsParams, etc.). Logic for Quad fixed-point number handling (conversion to/from Python Decimals).
+- APIs and Integrations: Exposes a Pythonic API for all wrapped contract functions. Integrates with Web3.py. Uses ABIs of Infinity Pools contracts.
+- Infrastructure Requirements: Python 3.8+, Web3.py library, access to an Ethereum JSON-RPC endpoint (local or remote).
+
+# Development Roadmap  
+- MVP Requirements:
+  - Core: Connection management, account loading.
+  - Wrappers: addLiquidity, swapDeposit, getPoolAddress, basic ERC20/721 ops (approve, balance).
+  - Data Models: AddLiquidityParams, SwapInfo, basic Quad handling.
+  - Error Handling: Basic blockchain error translation.
+  - Testing: Unit tests for MVP features.
+  - Docs: Quick start and API docs for MVP.
+- Future Enhancements:
+  - Full support for all Periphery functions (newLoanWithSwap, batchActionsOnSwappers, reflow, collect, drain, tap).
+  - Advanced Quad handling and complex data model support.
+  - Comprehensive event subscription and filtering.
+  - Asynchronous operations (async/await).
+  - Robust custom error parsing.
+  - Integration testing suite with local blockchain.
+  - Layer 2 support, advanced gas strategies.
+  - Full Sphinx documentation with examples.
+
+# Logical Dependency Chain  
+1. Base Setup: Project structure, linting, basic CI, Web3.py integration.
+2. Utilities: Quad conversion, ABI/address configuration management.
+3. Connection & Account: Module for node connection and private key loading.
+4. ERC20/721 Basics: approve, balanceOf, ownerOf wrappers.
+5. MVP Feature 1 - Liquidity: `getPoolAddress`, `AddLiquidityParams` model, `addLiquidity` wrapper.
+6. MVP Feature 2 - Swap: `SwapInfo` model, `swapDeposit` wrapper.
+7. Unit Testing Framework: Setup pytest, initial tests for utilities and MVP features.
+8. Documentation: Initial README, installation, MVP feature usage.
+9. Expansion: Iteratively add other Periphery functions, data models, event handling, and robust error parsing, followed by integration tests.
+
+# Risks and Mitigations  
+- Technical Challenges:
+  - Quad Type Complexity: Risk of precision errors. Mitigation: Use Python's Decimal type, extensive unit testing for conversions.
+  - Smart Contract Upgrades: Protocol changes breaking SDK. Mitigation: Version SDK with contract versions, design for modularity, API stability focus.
+  - Complex Batch Operations: `batchActionsOnSwappers` logic is intricate. Mitigation: Phased implementation, detailed integration tests for various scenarios.
+- Figuring out the MVP: Scope creep or missing vital initial features. Mitigation: Prioritize core user flows (add liquidity, swap) based on user needs, iterate based on feedback.
+- Resource Constraints (Time/Devs): Slow development. Mitigation: Phased roadmap, focus on core MVP, clear task breakdown.
+- Test Environment Management: Ensuring consistent testnet/local node state. Mitigation: Dockerized local node setup, scripts for state reset, well-documented test procedures.
+
+# Appendix  
+- Key Non-Functional Requirements: Performance (efficient interaction), Security (safe key handling, dependency vetting), Usability (Pythonic, well-documented), Maintainability (modular, PEP 8), Reliability (stable, predictable), Compatibility (Python 3.8+).
+- Success Metrics: Adoption (PyPI downloads), Community Engagement (GitHub activity), Developer Satisfaction (feedback), Reliability (low bug rate), Test Coverage (>90% unit).
+- Primary Reference: InfinityPools_SDK_Guide.md for detailed Periphery contract functionalities.
+</PRD>
