@@ -1,11 +1,72 @@
 # Task ID: 12
-# Title: SDK: Implement collect_fees function
-# Status: pending
+# Title: Task #12: Develop Functional Test Framework with Tenderly Impersonation for SDK
+# Status: done
 # Dependencies: None
 # Priority: high
-# Description: Implement the 'collect_fees' function in InfinityPoolsSDK. This allows users to claim earned fees from their LP positions without removing the underlying liquidity. Requires ABI definition, SDK method implementation, and unit tests.
+# Description: Create a comprehensive functional test framework that leverages Tenderly impersonation to test SDK functions with real accounts, without requiring private keys.
 # Details:
+This task involves building a robust functional test framework for the SDK using Tenderly impersonation capabilities implemented in Task #11. The implementation should include:
 
+1. Create a base functional test class (e.g., `BaseFunctionalTest`) that provides:
+   - Common setup and teardown methods
+   - Fixtures for Tenderly impersonation
+   - Utilities for account management and transaction verification
+   - Helper methods for common assertions and validations
+   - Configuration handling for test environments
+
+2. Implement functional tests for `add_liquidity`:
+   - Test various liquidity addition scenarios with different parameters
+   - Verify token transfers and position updates
+   - Test edge cases including min/max tick ranges
+   - Handle both new position creation and existing position expansion
+
+3. Implement functional tests for `remove_liquidity`:
+   - Test partial and complete liquidity removal
+   - Verify correct token amounts returned
+   - Test across different position configurations
+   - Validate position state after removal
+
+4. Set up extensible test structure for additional SDK functions:
+   - Create test class templates for `collect_fees`, `swap_exact_input`, `swap_exact_output`, `get_position_details`, and `get_pool_info`
+   - Implement shared test utilities that can be reused across function tests
+   - Design parameterized test cases that can handle various input configurations
+
+5. Configure test runner integration:
+   - Implement a mechanism to run tests with the `--run-integration` flag
+   - Ensure tests can be run in isolation or as part of a full test suite
+   - Add proper logging and reporting for test results
+
+The implementation should follow best practices for test organization, including proper setup/teardown, clear test case naming, and comprehensive assertions. Tests should be designed to be maintainable and extensible as the SDK evolves.
 
 # Test Strategy:
+The test strategy for this task should include:
 
+1. Code Review:
+   - Verify the base test class implements all required utilities and fixtures
+   - Ensure test organization follows best practices and is maintainable
+   - Check that Tenderly impersonation is properly integrated
+   - Confirm test coverage for various scenarios and edge cases
+
+2. Unit Testing:
+   - Run individual test cases to verify they correctly test specific SDK functions
+   - Validate that test assertions properly check expected outcomes
+   - Ensure test utilities function as expected
+
+3. Integration Testing:
+   - Run the full test suite with the `--run-integration` flag
+   - Verify tests successfully impersonate the specified account (0x9eAFc0c2b04D96a1C1edAdda8A474a4506752207)
+   - Confirm tests interact with actual contracts on the blockchain
+   - Validate that all SDK functions are tested with real-world scenarios
+
+4. Validation Criteria:
+   - All tests should pass consistently when run with the integration flag
+   - Test coverage should meet or exceed 90% for the SDK functions being tested
+   - Tests should complete within a reasonable time frame (< 5 minutes for the full suite)
+   - Test reports should provide clear information about test results and any failures
+
+5. Documentation:
+   - Verify that the test framework is well-documented with usage examples
+   - Ensure comments explain test scenarios and expected outcomes
+   - Confirm README includes instructions for running tests with the integration flag
+
+The implementation will be considered complete when all tests pass consistently, provide adequate coverage, and follow the specified structure for extensibility.

@@ -1,11 +1,55 @@
 # Task ID: 13
-# Title: SDK: Implement swap_exact_input function
+# Title: Implement Tenderly Impersonation Functional Test Framework
 # Status: pending
 # Dependencies: None
 # Priority: high
-# Description: Implement the 'swap_exact_input' function in InfinityPoolsSDK. Allows users to swap a known amount of an input token for an output token. Requires ABI definition, SDK method implementation, data model updates (if any), and unit tests.
+# Description: Create a comprehensive functional testing framework that leverages Tenderly impersonation to test SDK functions with real accounts and state on mainnet forks.
 # Details:
-
+The framework should support testing all core SDK functions including add_liquidity, remove_liquidity, collect_fees, swap_exact_input, swap_exact_output, get_position_details, and get_pool_info. Tests should be able to impersonate specific accounts to interact with real positions and pools without requiring private keys.
 
 # Test Strategy:
+
+
+# Subtasks:
+## 1. Create Simple Impersonation Test Script [done]
+### Dependencies: None
+### Description: Develop a simple script to manually test the impersonation functionality with a specific SDK function
+### Details:
+Create a standalone script that uses the Tenderly impersonation feature to execute a simple SDK function call (e.g., getting account balances or position details). This will verify that the core impersonation functionality works correctly before building more complex tests. The script should be well-documented to serve as a reference for future test development.
+
+## 2. Update Base Functional Test Class [done]
+### Dependencies: None
+### Description: Refine the base functional test class to properly initialize the SDK and provide common utilities
+### Details:
+Modify the BaseTenderlyFunctionalTest class to correctly initialize the SDK with the necessary parameters (connector and periphery address). Add helper methods for common operations like getting contract instances, checking balances, and handling transactions. Ensure the impersonated_connector fixture properly sets up the connector with the correct headers and configuration.
+
+## 3. Implement Add Liquidity Functional Test [done]
+### Dependencies: 13.2
+### Description: Create a functional test for the add_liquidity SDK function using Tenderly impersonation
+### Details:
+Update the add_liquidity functional test to match the actual SDK implementation. Ensure it correctly handles token approvals, parameter formatting, and result verification. The test should use real token addresses and pools from mainnet, with appropriate safety measures to use small amounts. Include proper error handling and detailed logging to aid in debugging.
+
+## 4. Implement Remove Liquidity Functional Test [pending]
+### Dependencies: 13.2
+### Description: Create a functional test for the remove_liquidity SDK function using Tenderly impersonation
+### Details:
+Update the remove_liquidity functional test to match the actual SDK implementation. The test should identify existing positions owned by the impersonated account, verify their details, and attempt to remove liquidity. Include proper validation of transaction results and position state changes. Handle edge cases like positions with zero liquidity or fully drained positions.
+
+## 5. Implement Swap Functions Functional Tests [pending]
+### Dependencies: 13.2
+### Description: Create functional tests for swap_exact_input and swap_exact_output SDK functions
+### Details:
+Develop functional tests for the swap functions using Tenderly impersonation. Tests should verify that swaps execute correctly with the impersonated account, including token approvals, parameter formatting, and result verification. Use real token pairs from mainnet with appropriate safety measures to use small amounts. Include proper error handling and detailed logging to aid in debugging.
+
+## 6. Implement Multicall/Batch Actions Test [pending]
+### Dependencies: 13.2
+### Description: Create a functional test for the multicall/batch_actions pattern using Tenderly impersonation
+### Details:
+Develop a functional test that demonstrates the multicall/batch_actions pattern identified by function selector `0xac9650d8` on the InfinityPoolsProxy. The test should batch multiple operations (e.g., approve and open position) into a single transaction using the impersonated account. Include proper validation of transaction results and state changes. This test is particularly important as it validates a core protocol pattern mentioned in the project memories.
+
+## 7. Create Documentation for Tenderly Impersonation Testing [pending]
+### Dependencies: None
+### Description: Document the Tenderly impersonation testing framework and best practices
+### Details:
+Create comprehensive documentation for the Tenderly impersonation testing framework, including setup instructions, usage examples, and best practices. The documentation should cover how to configure environment variables, how to select accounts for impersonation, how to handle gas estimation issues, and how to troubleshoot common problems. Include examples of how to use the framework for testing different SDK functions and how to extend it for new functions.
 

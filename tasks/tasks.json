@@ -209,6 +209,111 @@
       ],
       "status": "pending",
       "subtasks": []
+    },
+    {
+      "id": 11,
+      "title": "Implement Tenderly Impersonation for Account Testing",
+      "description": "Enhance the SDK with Tenderly impersonation capabilities to enable testing with real user accounts without requiring private keys, specifically supporting account 0x9eAFc0c2b04D96a1C1edAdda8A474a4506752207.",
+      "details": "This task involves several key implementation steps:\n\n1. Extend the TenderlyFork class to support account impersonation:\n   - Add methods to impersonate accounts using Tenderly's API\n   - Implement functionality to manage impersonation state\n   - Create helper methods to simplify impersonation setup and teardown\n\n2. Develop methods to create impersonated Web3 instances:\n   - Create factory methods that return Web3 instances configured for impersonation\n   - Ensure proper middleware configuration for impersonated transactions\n   - Handle authentication and authorization with Tenderly's API\n\n3. Update InfinityPoolsConnector for impersonation support:\n   - Add support for custom HTTP headers required by Tenderly\n   - Implement methods to handle impersonated account interactions\n   - Ensure compatibility with existing connector functionality\n\n4. Implement proper error handling:\n   - Create specific exception types for impersonation failures\n   - Add validation for impersonation parameters\n   - Provide clear error messages for troubleshooting\n\n5. Create comprehensive documentation:\n   - Document all new methods and parameters\n   - Provide usage examples for impersonation functionality\n   - Include explanations of Tenderly-specific concepts and requirements\n\nThe implementation should prioritize a clean, intuitive API that makes impersonation straightforward while handling the complexity of Tenderly's requirements internally.",
+      "testStrategy": "Testing will verify the complete impersonation functionality through multiple approaches:\n\n1. Unit Tests:\n   - Test TenderlyFork impersonation methods with mocked Tenderly API responses\n   - Verify proper handling of successful and failed impersonation attempts\n   - Test error handling for various edge cases (invalid addresses, API failures)\n\n2. Integration Tests:\n   - Create test fixtures that demonstrate impersonation setup\n   - Implement tests that use impersonated accounts to interact with contracts\n   - Verify that transactions from impersonated accounts are properly processed\n\n3. Specific Account Testing:\n   - Create dedicated tests using the specified account (0x9eAFc0c2b04D96a1C1edAdda8A474a4506752207)\n   - Verify that all SDK functionality works correctly with this impersonated account\n   - Test various contract interactions using the impersonated account\n\n4. End-to-End Workflow Tests:\n   - Create tests that demonstrate complete workflows using impersonation\n   - Test switching between different impersonated accounts\n   - Verify that impersonation works with all existing SDK functionality\n\n5. Documentation Verification:\n   - Review and test all code examples in documentation\n   - Ensure documentation accurately reflects implementation\n   - Verify that error messages match documentation\n\nAll tests should be automated and included in the CI pipeline to ensure ongoing functionality.",
+      "status": "done",
+      "dependencies": [],
+      "priority": "high",
+      "subtasks": []
+    },
+    {
+      "id": 12,
+      "title": "Task #12: Develop Functional Test Framework with Tenderly Impersonation for SDK",
+      "description": "Create a comprehensive functional test framework that leverages Tenderly impersonation to test SDK functions with real accounts, without requiring private keys.",
+      "details": "This task involves building a robust functional test framework for the SDK using Tenderly impersonation capabilities implemented in Task #11. The implementation should include:\n\n1. Create a base functional test class (e.g., `BaseFunctionalTest`) that provides:\n   - Common setup and teardown methods\n   - Fixtures for Tenderly impersonation\n   - Utilities for account management and transaction verification\n   - Helper methods for common assertions and validations\n   - Configuration handling for test environments\n\n2. Implement functional tests for `add_liquidity`:\n   - Test various liquidity addition scenarios with different parameters\n   - Verify token transfers and position updates\n   - Test edge cases including min/max tick ranges\n   - Handle both new position creation and existing position expansion\n\n3. Implement functional tests for `remove_liquidity`:\n   - Test partial and complete liquidity removal\n   - Verify correct token amounts returned\n   - Test across different position configurations\n   - Validate position state after removal\n\n4. Set up extensible test structure for additional SDK functions:\n   - Create test class templates for `collect_fees`, `swap_exact_input`, `swap_exact_output`, `get_position_details`, and `get_pool_info`\n   - Implement shared test utilities that can be reused across function tests\n   - Design parameterized test cases that can handle various input configurations\n\n5. Configure test runner integration:\n   - Implement a mechanism to run tests with the `--run-integration` flag\n   - Ensure tests can be run in isolation or as part of a full test suite\n   - Add proper logging and reporting for test results\n\nThe implementation should follow best practices for test organization, including proper setup/teardown, clear test case naming, and comprehensive assertions. Tests should be designed to be maintainable and extensible as the SDK evolves.",
+      "testStrategy": "The test strategy for this task should include:\n\n1. Code Review:\n   - Verify the base test class implements all required utilities and fixtures\n   - Ensure test organization follows best practices and is maintainable\n   - Check that Tenderly impersonation is properly integrated\n   - Confirm test coverage for various scenarios and edge cases\n\n2. Unit Testing:\n   - Run individual test cases to verify they correctly test specific SDK functions\n   - Validate that test assertions properly check expected outcomes\n   - Ensure test utilities function as expected\n\n3. Integration Testing:\n   - Run the full test suite with the `--run-integration` flag\n   - Verify tests successfully impersonate the specified account (0x9eAFc0c2b04D96a1C1edAdda8A474a4506752207)\n   - Confirm tests interact with actual contracts on the blockchain\n   - Validate that all SDK functions are tested with real-world scenarios\n\n4. Validation Criteria:\n   - All tests should pass consistently when run with the integration flag\n   - Test coverage should meet or exceed 90% for the SDK functions being tested\n   - Tests should complete within a reasonable time frame (< 5 minutes for the full suite)\n   - Test reports should provide clear information about test results and any failures\n\n5. Documentation:\n   - Verify that the test framework is well-documented with usage examples\n   - Ensure comments explain test scenarios and expected outcomes\n   - Confirm README includes instructions for running tests with the integration flag\n\nThe implementation will be considered complete when all tests pass consistently, provide adequate coverage, and follow the specified structure for extensibility.",
+      "status": "done",
+      "dependencies": [],
+      "priority": "high",
+      "subtasks": []
+    },
+    {
+      "id": 13,
+      "title": "Implement Tenderly Impersonation Functional Test Framework",
+      "description": "Create a comprehensive functional testing framework that leverages Tenderly impersonation to test SDK functions with real accounts and state on mainnet forks.",
+      "details": "The framework should support testing all core SDK functions including add_liquidity, remove_liquidity, collect_fees, swap_exact_input, swap_exact_output, get_position_details, and get_pool_info. Tests should be able to impersonate specific accounts to interact with real positions and pools without requiring private keys.",
+      "testStrategy": "",
+      "status": "pending",
+      "dependencies": [],
+      "priority": "high",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create Simple Impersonation Test Script",
+          "description": "Develop a simple script to manually test the impersonation functionality with a specific SDK function",
+          "details": "Create a standalone script that uses the Tenderly impersonation feature to execute a simple SDK function call (e.g., getting account balances or position details). This will verify that the core impersonation functionality works correctly before building more complex tests. The script should be well-documented to serve as a reference for future test development.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 13
+        },
+        {
+          "id": 2,
+          "title": "Update Base Functional Test Class",
+          "description": "Refine the base functional test class to properly initialize the SDK and provide common utilities",
+          "details": "Modify the BaseTenderlyFunctionalTest class to correctly initialize the SDK with the necessary parameters (connector and periphery address). Add helper methods for common operations like getting contract instances, checking balances, and handling transactions. Ensure the impersonated_connector fixture properly sets up the connector with the correct headers and configuration.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 13
+        },
+        {
+          "id": 3,
+          "title": "Implement Add Liquidity Functional Test",
+          "description": "Create a functional test for the add_liquidity SDK function using Tenderly impersonation",
+          "details": "Update the add_liquidity functional test to match the actual SDK implementation. Ensure it correctly handles token approvals, parameter formatting, and result verification. The test should use real token addresses and pools from mainnet, with appropriate safety measures to use small amounts. Include proper error handling and detailed logging to aid in debugging.",
+          "status": "done",
+          "dependencies": [
+            "13.2"
+          ],
+          "parentTaskId": 13
+        },
+        {
+          "id": 4,
+          "title": "Implement Remove Liquidity Functional Test",
+          "description": "Create a functional test for the remove_liquidity SDK function using Tenderly impersonation",
+          "details": "Update the remove_liquidity functional test to match the actual SDK implementation. The test should identify existing positions owned by the impersonated account, verify their details, and attempt to remove liquidity. Include proper validation of transaction results and position state changes. Handle edge cases like positions with zero liquidity or fully drained positions.",
+          "status": "pending",
+          "dependencies": [
+            "13.2"
+          ],
+          "parentTaskId": 13
+        },
+        {
+          "id": 5,
+          "title": "Implement Swap Functions Functional Tests",
+          "description": "Create functional tests for swap_exact_input and swap_exact_output SDK functions",
+          "details": "Develop functional tests for the swap functions using Tenderly impersonation. Tests should verify that swaps execute correctly with the impersonated account, including token approvals, parameter formatting, and result verification. Use real token pairs from mainnet with appropriate safety measures to use small amounts. Include proper error handling and detailed logging to aid in debugging.",
+          "status": "pending",
+          "dependencies": [
+            "13.2"
+          ],
+          "parentTaskId": 13
+        },
+        {
+          "id": 6,
+          "title": "Implement Multicall/Batch Actions Test",
+          "description": "Create a functional test for the multicall/batch_actions pattern using Tenderly impersonation",
+          "details": "Develop a functional test that demonstrates the multicall/batch_actions pattern identified by function selector `0xac9650d8` on the InfinityPoolsProxy. The test should batch multiple operations (e.g., approve and open position) into a single transaction using the impersonated account. Include proper validation of transaction results and state changes. This test is particularly important as it validates a core protocol pattern mentioned in the project memories.",
+          "status": "pending",
+          "dependencies": [
+            "13.2"
+          ],
+          "parentTaskId": 13
+        },
+        {
+          "id": 7,
+          "title": "Create Documentation for Tenderly Impersonation Testing",
+          "description": "Document the Tenderly impersonation testing framework and best practices",
+          "details": "Create comprehensive documentation for the Tenderly impersonation testing framework, including setup instructions, usage examples, and best practices. The documentation should cover how to configure environment variables, how to select accounts for impersonation, how to handle gas estimation issues, and how to troubleshoot common problems. Include examples of how to use the framework for testing different SDK functions and how to extend it for new functions.",
+          "status": "pending",
+          "dependencies": [],
+          "parentTaskId": 13
+        }
+      ]
     }
   ]
 }

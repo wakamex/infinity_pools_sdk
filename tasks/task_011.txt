@@ -1,11 +1,65 @@
 # Task ID: 11
-# Title: SDK: Implement remove_liquidity function
-# Status: pending
+# Title: Implement Tenderly Impersonation for Account Testing
+# Status: done
 # Dependencies: None
 # Priority: high
-# Description: Implement the 'remove_liquidity' function in InfinityPoolsSDK. This allows users to withdraw their liquidity and claim accrued fees. Requires ABI definition, SDK method implementation, data model updates (if any), and unit tests.
+# Description: Enhance the SDK with Tenderly impersonation capabilities to enable testing with real user accounts without requiring private keys, specifically supporting account 0x9eAFc0c2b04D96a1C1edAdda8A474a4506752207.
 # Details:
+This task involves several key implementation steps:
 
+1. Extend the TenderlyFork class to support account impersonation:
+   - Add methods to impersonate accounts using Tenderly's API
+   - Implement functionality to manage impersonation state
+   - Create helper methods to simplify impersonation setup and teardown
+
+2. Develop methods to create impersonated Web3 instances:
+   - Create factory methods that return Web3 instances configured for impersonation
+   - Ensure proper middleware configuration for impersonated transactions
+   - Handle authentication and authorization with Tenderly's API
+
+3. Update InfinityPoolsConnector for impersonation support:
+   - Add support for custom HTTP headers required by Tenderly
+   - Implement methods to handle impersonated account interactions
+   - Ensure compatibility with existing connector functionality
+
+4. Implement proper error handling:
+   - Create specific exception types for impersonation failures
+   - Add validation for impersonation parameters
+   - Provide clear error messages for troubleshooting
+
+5. Create comprehensive documentation:
+   - Document all new methods and parameters
+   - Provide usage examples for impersonation functionality
+   - Include explanations of Tenderly-specific concepts and requirements
+
+The implementation should prioritize a clean, intuitive API that makes impersonation straightforward while handling the complexity of Tenderly's requirements internally.
 
 # Test Strategy:
+Testing will verify the complete impersonation functionality through multiple approaches:
 
+1. Unit Tests:
+   - Test TenderlyFork impersonation methods with mocked Tenderly API responses
+   - Verify proper handling of successful and failed impersonation attempts
+   - Test error handling for various edge cases (invalid addresses, API failures)
+
+2. Integration Tests:
+   - Create test fixtures that demonstrate impersonation setup
+   - Implement tests that use impersonated accounts to interact with contracts
+   - Verify that transactions from impersonated accounts are properly processed
+
+3. Specific Account Testing:
+   - Create dedicated tests using the specified account (0x9eAFc0c2b04D96a1C1edAdda8A474a4506752207)
+   - Verify that all SDK functionality works correctly with this impersonated account
+   - Test various contract interactions using the impersonated account
+
+4. End-to-End Workflow Tests:
+   - Create tests that demonstrate complete workflows using impersonation
+   - Test switching between different impersonated accounts
+   - Verify that impersonation works with all existing SDK functionality
+
+5. Documentation Verification:
+   - Review and test all code examples in documentation
+   - Ensure documentation accurately reflects implementation
+   - Verify that error messages match documentation
+
+All tests should be automated and included in the CI pipeline to ensure ongoing functionality.
