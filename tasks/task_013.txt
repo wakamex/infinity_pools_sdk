@@ -29,7 +29,7 @@ Modify the BaseTenderlyFunctionalTest class to correctly initialize the SDK with
 ### Details:
 Update the add_liquidity functional test to match the actual SDK implementation. Ensure it correctly handles token approvals, parameter formatting, and result verification. The test should use real token addresses and pools from mainnet, with appropriate safety measures to use small amounts. Include proper error handling and detailed logging to aid in debugging.
 
-## 4. Implement Remove Liquidity Functional Test [pending]
+## 4. Implement Remove Liquidity Functional Test [in-progress]
 ### Dependencies: 13.2
 ### Description: Create a functional test for the remove_liquidity SDK function using Tenderly impersonation
 ### Details:
@@ -52,4 +52,32 @@ Develop a functional test that demonstrates the multicall/batch_actions pattern 
 ### Description: Document the Tenderly impersonation testing framework and best practices
 ### Details:
 Create comprehensive documentation for the Tenderly impersonation testing framework, including setup instructions, usage examples, and best practices. The documentation should cover how to configure environment variables, how to select accounts for impersonation, how to handle gas estimation issues, and how to troubleshoot common problems. Include examples of how to use the framework for testing different SDK functions and how to extend it for new functions.
+
+## 8. Create Constants File for Token and Contract Addresses [done]
+### Dependencies: None
+### Description: Create a centralized constants file to store token addresses, contract addresses, and fee tiers for easier maintenance and reference across the codebase.
+### Details:
+Implement a constants.py file with:
+- Base network token addresses (WETH, USDbC, sUSDe, wstETH)
+- Contract addresses for different networks (proxy and implementation)
+- Fee tier constants (0.01%, 0.05%, 0.3%, 1%)
+This will improve code maintainability and reduce duplication.
+
+## 9. Fix Token and Contract Addresses in Tests [done]
+### Dependencies: None
+### Description: Update the functional tests to use the correct token and contract addresses from the constants file.
+### Details:
+- Update test_add_liquidity_tenderly_functional.py to use the correct proxy address and token addresses from constants
+- Update test_remove_liquidity_tenderly_functional.py to use the correct proxy address
+- Fix imports in both test files to ensure they're using the correct ABIs and data models
+- Ensure consistent use of Web3.to_checksum_address() for all addresses
+
+## 10. Debug Token Approval Issues in Tenderly Tests [pending]
+### Dependencies: None
+### Description: Investigate and fix the token approval issues in the add_liquidity functional test with Tenderly impersonation.
+### Details:
+- Debug the "Failed to approve token0: Value must be an instance of str" error
+- Ensure the impersonated address has sufficient token balances on the Tenderly fork
+- Verify the transaction_overrides parameter is correctly handling gas limit settings
+- Test with different token pairs if needed to validate the functionality
 

@@ -114,6 +114,50 @@ class TenderlyFork:
                 logging.error(f"Response: {e.response.text}")
             raise
     
+    def set_block_gas_limit(self, gas_limit: int) -> bool:
+        """Set the block gas limit on the Tenderly fork.
+        
+        Args:
+            gas_limit: The gas limit to set for blocks on the fork.
+            
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        if not self.fork_id:
+            logging.warning("No fork to modify")
+            return False
+            
+        # Use the Tenderly API to set the block gas limit
+        # This is a custom JSON-RPC method provided by Tenderly
+        payload = {
+            "jsonrpc": "2.0",
+            "method": "tenderly_setBlockGasLimit",
+            "params": [gas_limit],
+            "id": 1
+        }
+        
+        try:
+            response = requests.post(
+                self.fork_rpc_url,
+                headers={"Content-Type": "application/json"},
+                json=payload,
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            if "error" in result:
+                logging.error(f"Failed to set block gas limit: {result['error']}")
+                return False
+                
+            logging.info(f"Set block gas limit to {gas_limit} on fork {self.fork_id}")
+            return True
+            
+        except requests.RequestException as e:
+            logging.error(f"Failed to set block gas limit on Tenderly fork: {e}")
+            if hasattr(e, "response") and e.response is not None:
+                logging.error(f"Response: {e.response.text}")
+            return False
+    
     def delete_fork(self) -> bool:
         """Delete the Tenderly fork.
         

@@ -276,7 +276,7 @@
           "title": "Implement Remove Liquidity Functional Test",
           "description": "Create a functional test for the remove_liquidity SDK function using Tenderly impersonation",
           "details": "Update the remove_liquidity functional test to match the actual SDK implementation. The test should identify existing positions owned by the impersonated account, verify their details, and attempt to remove liquidity. Include proper validation of transaction results and position state changes. Handle edge cases like positions with zero liquidity or fully drained positions.",
-          "status": "pending",
+          "status": "in-progress",
           "dependencies": [
             "13.2"
           ],
@@ -309,6 +309,33 @@
           "title": "Create Documentation for Tenderly Impersonation Testing",
           "description": "Document the Tenderly impersonation testing framework and best practices",
           "details": "Create comprehensive documentation for the Tenderly impersonation testing framework, including setup instructions, usage examples, and best practices. The documentation should cover how to configure environment variables, how to select accounts for impersonation, how to handle gas estimation issues, and how to troubleshoot common problems. Include examples of how to use the framework for testing different SDK functions and how to extend it for new functions.",
+          "status": "pending",
+          "dependencies": [],
+          "parentTaskId": 13
+        },
+        {
+          "id": 8,
+          "title": "Create Constants File for Token and Contract Addresses",
+          "description": "Create a centralized constants file to store token addresses, contract addresses, and fee tiers for easier maintenance and reference across the codebase.",
+          "details": "Implement a constants.py file with:\n- Base network token addresses (WETH, USDbC, sUSDe, wstETH)\n- Contract addresses for different networks (proxy and implementation)\n- Fee tier constants (0.01%, 0.05%, 0.3%, 1%)\nThis will improve code maintainability and reduce duplication.",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 13
+        },
+        {
+          "id": 9,
+          "title": "Fix Token and Contract Addresses in Tests",
+          "description": "Update the functional tests to use the correct token and contract addresses from the constants file.",
+          "details": "- Update test_add_liquidity_tenderly_functional.py to use the correct proxy address and token addresses from constants\n- Update test_remove_liquidity_tenderly_functional.py to use the correct proxy address\n- Fix imports in both test files to ensure they're using the correct ABIs and data models\n- Ensure consistent use of Web3.to_checksum_address() for all addresses",
+          "status": "done",
+          "dependencies": [],
+          "parentTaskId": 13
+        },
+        {
+          "id": 10,
+          "title": "Debug Token Approval Issues in Tenderly Tests",
+          "description": "Investigate and fix the token approval issues in the add_liquidity functional test with Tenderly impersonation.",
+          "details": "- Debug the \"Failed to approve token0: Value must be an instance of str\" error\n- Ensure the impersonated address has sufficient token balances on the Tenderly fork\n- Verify the transaction_overrides parameter is correctly handling gas limit settings\n- Test with different token pairs if needed to validate the functionality",
           "status": "pending",
           "dependencies": [],
           "parentTaskId": 13

@@ -61,7 +61,8 @@ class InfinityPoolsSDK:
         earn_era: int = 0,
         token0_decimals: Optional[int] = None,
         token1_decimals: Optional[int] = None,
-        auto_approve: bool = True
+        auto_approve: bool = True,
+        transaction_overrides: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Add liquidity to an Infinity Pool.
 
@@ -136,14 +137,19 @@ class InfinityPoolsSDK:
         contract_call_params = params.to_contract_tuple(_token0_decimals, _token1_decimals)
 
         periphery_contract = self.periphery_contract
+        # Set up transaction parameters
         tx_params = {
             'from': self.connector.account.address,
-            'gas': self.connector.default_gas_limit,
+            'gas': 1000000,  # Default gas limit
         }
         
         # Add nonce if not on a local network
         if getattr(self.connector, 'network_type', None) != "local" and getattr(self.connector.w3.eth, 'chain_id', None) != 1337:
             tx_params["nonce"] = self.connector.w3.eth.get_transaction_count(self.connector.account.address)
+        
+        # Apply any transaction overrides
+        if transaction_overrides:
+            tx_params.update(transaction_overrides)
 
         transaction = periphery_contract.functions.addLiquidity(*contract_call_params).build_transaction(tx_params)
         
@@ -159,7 +165,8 @@ class InfinityPoolsSDK:
         recipient: Optional[str] = None,
         deadline: Optional[int] = None,
         amount0_min: int = 0,  # Slippage protection for token0
-        amount1_min: int = 0   # Slippage protection for token1
+        amount1_min: int = 0,   # Slippage protection for token1
+        transaction_overrides: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Remove a percentage of liquidity from a position and collect fees."""
         if not self.connector.account:
@@ -227,10 +234,16 @@ class InfinityPoolsSDK:
             # 4. Prepare and send multicall
             tx_params = {
                 "from": self.connector.account.address,
-                "gas": self.connector.default_gas_limit, # Consider estimating gas
+                "gas": 1000000,  # Default gas limit
             }
-            if self.connector.network_type != "local" and getattr(self.connector.w3.eth, 'chain_id', None) != 1337:
-                 tx_params["nonce"] = self.connector.w3.eth.get_transaction_count(self.connector.account.address)
+        
+            # Add nonce if not on a local network
+            if getattr(self.connector, 'network_type', None) != "local" and getattr(self.connector.w3.eth, 'chain_id', None) != 1337:
+                tx_params["nonce"] = self.connector.w3.eth.get_transaction_count(self.connector.account.address)
+            
+            # Apply any transaction overrides
+            if transaction_overrides:
+                tx_params.update(transaction_overrides)
             
             multicall_fn = self.periphery_contract.functions.multicall(actual_deadline, calls_to_make)
             
