@@ -2,31 +2,7 @@ import os
 
 from web3 import Web3
 
-
-def load_env_vars(env_path=".env"):
-    """Load specific environment variables (e.g., BASE_RPC_URL, ALCHEMY_API_KEY) from a .env file."""
-    loaded_vars = []
-    try:
-        with open(env_path, "r", encoding="utf-8") as f:
-            for line in f:
-                stripped_line = line.strip()
-                if not stripped_line or stripped_line.startswith("#") or "=" not in stripped_line:
-                    continue
-                key, value = line.split("=", 1)
-                key = key.strip()
-                value = value.strip().strip("'\"")  # Remove potential quotes
-                # Target specific keys we might use
-                if key in ["BASE_RPC_URL", "ALCHEMY_API_KEY"]:
-                    os.environ[key] = value
-                    if key not in loaded_vars:
-                        loaded_vars.append(key)
-        if loaded_vars:
-            print(f"Loaded {', '.join(loaded_vars)} from {env_path}")
-    except FileNotFoundError:
-        print(f"Warning: {env_path} file not found. Required variables (e.g., BASE_RPC_URL) should be set directly in your environment.")
-    except Exception as e:
-        print(f"Warning: Error reading {env_path}: {e}")
-
+from infinity_pools_sdk.utils.env_loader import load_env_vars
 
 # Load environment variables from .env file (if it exists)
 load_env_vars()
