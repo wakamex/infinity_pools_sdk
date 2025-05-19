@@ -276,7 +276,7 @@
           "title": "Implement Remove Liquidity Functional Test",
           "description": "Create a functional test for the remove_liquidity SDK function using Tenderly impersonation",
           "details": "Update the remove_liquidity functional test to match the actual SDK implementation. The test should identify existing positions owned by the impersonated account, verify their details, and attempt to remove liquidity. Include proper validation of transaction results and position state changes. Handle edge cases like positions with zero liquidity or fully drained positions.",
-          "status": "in-progress",
+          "status": "done",
           "dependencies": [
             "13.2"
           ],

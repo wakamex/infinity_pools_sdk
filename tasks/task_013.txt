@@ -29,7 +29,7 @@ Modify the BaseTenderlyFunctionalTest class to correctly initialize the SDK with
 ### Details:
 Update the add_liquidity functional test to match the actual SDK implementation. Ensure it correctly handles token approvals, parameter formatting, and result verification. The test should use real token addresses and pools from mainnet, with appropriate safety measures to use small amounts. Include proper error handling and detailed logging to aid in debugging.
 
-## 4. Implement Remove Liquidity Functional Test [in-progress]
+## 4. Implement Remove Liquidity Functional Test [done]
 ### Dependencies: 13.2
 ### Description: Create a functional test for the remove_liquidity SDK function using Tenderly impersonation
 ### Details:
