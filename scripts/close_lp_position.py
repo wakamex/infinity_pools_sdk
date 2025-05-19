@@ -23,8 +23,8 @@ RECIPIENT_ADDRESS = None
 DEADLINE_SECONDS_FROM_NOW = 300  # 5 minutes
 
 
-def get_first_open_lp_token_id(owner_address: str) -> tuple[Optional[int], Optional[int]]:
-    """Get the 'lpNum' (token_id) and raw liquidity of the first open liquidity position for the owner via API."""
+def get_lp_details_by_lpnum(owner_address: str, target_lp_num: int) -> tuple[Optional[int], Optional[int]]:
+    """Get the full encoded 'id' (as int) and raw liquidity of a specific liquidity position by its 'lpNum'."""
     print(f"Fetching liquidity positions for wallet: {owner_address} using imported function...")
     positions = get_liquidity_positions_by_wallet(owner_address)
 
@@ -39,48 +39,60 @@ def get_first_open_lp_token_id(owner_address: str) -> tuple[Optional[int], Optio
     for position in positions:
         for k,v in position.items():
             print(f"{k}: {v}")
-        if isinstance(position, dict) and position.get("status") == "OPEN":
-            lp_num = position.get("lpNum")
-            if isinstance(lp_num, int) and position.get("status") == "OPEN":
-                print(f"Found OPEN position with lpNum (token_id): {lp_num}")
-                raw_liquidity = None
-                try:
-                    locked_base_size_str = str(position.get("lockedBaseSize", "0"))
-                    locked_quote_size_str = str(position.get("lockedQuoteSize", "0"))
+        lp_num = position.get("lpNum")
+        if isinstance(lp_num, int) and lp_num == target_lp_num:
+            print(f"Found target position with lpNum: {lp_num}. Status: {position.get('status')}")
+            encoded_id_hex = position.get("id")
+            if not (isinstance(encoded_id_hex, str) and encoded_id_hex.startswith('0x')):
+                print(f"Warning: Target position with lpNum {lp_num} has missing or invalid 'id': '{encoded_id_hex}'. Cannot proceed with this position.")
+                return None, None # Cannot proceed without a valid encoded ID
+            
+            token_id_for_sdk: Optional[int] = None
+            try:
+                token_id_for_sdk = int(encoded_id_hex, 16)
+                print(f"Using Encoded ID for TX: {encoded_id_hex} (for lpNum {lp_num})")
+            except ValueError:
+                print(f"Error: Could not convert encoded_id_hex '{encoded_id_hex}' to an integer for lpNum {lp_num}. Cannot proceed.")
+                return None, None
 
-                    locked_base_decimal = Decimal(locked_base_size_str)
-                    locked_quote_decimal = Decimal(locked_quote_size_str)
+            raw_liquidity = None
+            try:
+                # Note: Liquidity calculation might not be relevant if the position was already drained/closed by UI
+                # but we calculate it for completeness or if it's still partially open.
+                locked_base_size_str = str(position.get("lockedBaseSize", "0"))
+                locked_quote_size_str = str(position.get("lockedQuoteSize", "0"))
+                available_base_size_str = str(position.get("availableBaseSize", "0")) # Consider available if draining
+                available_quote_size_str = str(position.get("availableQuoteSize", "0"))
 
-                    # TODO: Dynamically fetch or correctly map token decimals based on asset addresses
-                    # position.get("baseAsset") and position.get("quoteAsset")
-                    # For now, assuming 18 decimals for both as sUSDe and wstETH typically have 18.
-                    base_token_decimals = 18
-                    quote_token_decimals = 18
+                # Prefer available amounts if draining, otherwise locked might be okay for 'current_position_liquidity_raw'
+                # The `drain` function doesn't need this, but the SDK call has the param.
+                # For `drain` this value is less critical, but let's try to be accurate.
+                effective_base_decimal = Decimal(available_base_size_str) if Decimal(available_base_size_str) > 0 else Decimal(locked_base_size_str)
+                effective_quote_decimal = Decimal(available_quote_size_str) if Decimal(available_quote_size_str) > 0 else Decimal(locked_quote_size_str)
 
-                    if locked_base_decimal > Decimal(0):
-                        raw_liquidity = int(locked_base_decimal * (Decimal(10)**base_token_decimals))
-                        print(f"Using lockedBaseSize: {locked_base_decimal} (raw: {raw_liquidity}) for position {lp_num}")
-                    elif locked_quote_decimal > Decimal(0):
-                        raw_liquidity = int(locked_quote_decimal * (Decimal(10)**quote_token_decimals))
-                        print(f"Using lockedQuoteSize: {locked_quote_decimal} (raw: {raw_liquidity}) for position {lp_num}")
-                    else:
-                        print(f"Warning: Both lockedBaseSize and lockedQuoteSize are zero or not found for OPEN position {lp_num}. Cannot determine off-chain liquidity.")
-                        # Fallback to on-chain call by returning None for raw_liquidity, or treat as zero liquidity.
-                        # Forcing removal of 0 liquidity if this occurs.
-                        raw_liquidity = 0 
+                base_token_decimals = 18
+                quote_token_decimals = 18
 
-                    return lp_num, raw_liquidity
+                if effective_base_decimal > Decimal(0):
+                    raw_liquidity = int(effective_base_decimal * (Decimal(10)**base_token_decimals))
+                    print(f"Using effectiveBaseSize: {effective_base_decimal} (raw: {raw_liquidity}) for position {lp_num}")
+                elif effective_quote_decimal > Decimal(0):
+                    raw_liquidity = int(effective_quote_decimal * (Decimal(10)**quote_token_decimals))
+                    print(f"Using effectiveQuoteSize: {effective_quote_decimal} (raw: {raw_liquidity}) for position {lp_num}")
+                else:
+                    print(f"Warning: Both effectiveBaseSize and effectiveQuoteSize are zero for position {lp_num}. Raw liquidity set to 0.")
+                    raw_liquidity = 0 
                 
-                except Exception as e:
-                    print(f"Error processing liquidity fields for position {lp_num}: {e}. API values: base='{position.get("lockedBaseSize")}', quote='{position.get("lockedQuoteSize")}'")
-                    # Fallback to on-chain call attempt
-                    return lp_num, None
-            elif isinstance(lp_num, int):
-                print(f"Skipping position {lp_num} with status: {position.get('status')}")
-            else:
-                print(f"Found open position, but 'lpNum' is not an int: {position}")
+                return token_id_for_sdk, raw_liquidity
+            
+            except Exception as e:
+                print(f"Error processing liquidity fields for lpNum {lp_num} (Encoded ID {encoded_id_hex}): {e}.")
+                if token_id_for_sdk is not None:
+                     print("Proceeding with token ID but raw liquidity will be None.")
+                     return token_id_for_sdk, None # Return ID, but None for liquidity if calculation failed
+                return None, None # Critical error if ID also failed
 
-    print("No open liquidity positions found for this address.")
+    print(f"Target liquidity position with lpNum {target_lp_num} not found for this address.")
     return None, None
 
 
@@ -93,19 +105,23 @@ def main():
     print(f"Connecting to {NETWORK} via {RPC_URL}...")
     connector = InfinityPoolsConnector(rpc_url=RPC_URL, network=NETWORK, private_key=PRIVATE_KEY)
 
-    if not connector.account:
-        print("Error: Account could not be loaded from private key.")
+    # Ensure account is loaded before trying to access its address
+    loaded_account = connector.account
+    if loaded_account is None: # Explicitly check for None
+        print("Error: Account could not be loaded from private key or is None.")
         return
-    my_address = connector.account.address
+    my_address = loaded_account.address
     print(f"Using account: {my_address}")
 
     sdk = InfinityPoolsSDK(connector=connector, periphery_address=PERIPHERY_CONTRACT_ADDRESS)
     print(f"InfinityPoolsSDK initialized for periphery: {PERIPHERY_CONTRACT_ADDRESS}")
 
-    token_id, current_liquidity_raw = get_first_open_lp_token_id(my_address)
+    target_lp_num_to_close = 97 # As requested by user
+    print(f"Attempting to find details for position with lpNum: {target_lp_num_to_close}")
+    token_id, current_liquidity_raw = get_lp_details_by_lpnum(my_address, target_lp_num_to_close)
 
     if token_id is None:
-        print("No active (open) liquidity position token_id found to close.")
+        print(f"Could not find details or a valid encoded ID for lpNum {target_lp_num_to_close} to close.")
         return
 
     recipient = RECIPIENT_ADDRESS if RECIPIENT_ADDRESS else my_address
@@ -126,8 +142,14 @@ def main():
             deadline=deadline,
             current_position_liquidity_raw=current_liquidity_raw # Pass the determined raw liquidity
         )
-        print("\nSuccessfully removed liquidity!")
-        print(f"  Transaction Hash: {result.get('tx_hash')}")
+        if result.get('status') == 1:
+            print(f"\nSuccessfully removed liquidity!")
+            print(f"  Transaction Hash: {result['tx_hash']}")
+            print(f"  Receipt Status: {result.get('status')}")
+        else:
+            print(f"\nFailed to remove liquidity.")
+            print(f"  Transaction Hash: {result['tx_hash']}")
+            print(f"  Receipt Status: {result.get('status')} (Transaction Reverted)")
         # print(f"  Receipt: {result.get('receipt')}") # Can be very verbose
     except Exception as e:
         print(f"\nError removing liquidity: {e}")

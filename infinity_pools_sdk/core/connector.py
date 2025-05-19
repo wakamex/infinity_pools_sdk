@@ -123,7 +123,7 @@ class InfinityPoolsConnector:
             signed_tx = self.account.sign_transaction(tx_params)
             
             # Send transaction
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction) # Changed rawTransaction to raw_transaction
             return "0x" + tx_hash.hex()
     
     def wait_for_transaction(self, tx_hash: str, timeout: int = 120) -> Dict[str, Any]:

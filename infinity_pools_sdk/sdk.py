@@ -80,6 +80,40 @@ class InfinityPoolsSDK:
         # Always create a new instance to ensure the tests can properly track constructor calls
         return ERC20Helper(self.connector)
 
+    def _prepare_transaction_params(self, overrides: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Prepare a dictionary of transaction parameters.
+
+        Includes 'from' address, default 'gas', conditional 'nonce', and applies overrides.
+        """
+        if not self._active_address:
+            raise ValueError("Cannot prepare transaction parameters without an active address.")
+
+        tx_params: Dict[str, Any] = {
+            "from": self._active_address,
+            "gas": 2_500_000,  # Default gas limit, increased for collect operations
+        }
+
+        # Add nonce if not on a local network (e.g., Ganache, Hardhat local node)
+        # Chain ID 1337 is often used by Ganache. Anvil default is 31337.
+        # A more robust check might involve looking at self.connector.network_type or specific chain IDs.
+        is_local_network = False
+        if hasattr(self.connector.w3.eth, 'chain_id'):
+            chain_id = self.connector.w3.eth.chain_id
+            if chain_id in {1337, 31337} or getattr(self.connector, "network_type", None) == "local":
+                is_local_network = True
+        
+        if not is_local_network:
+            try:
+                tx_params["nonce"] = self.connector.w3.eth.get_transaction_count(self._active_address)
+            except Exception as e:
+                # This might happen on networks where get_transaction_count is restricted or fails
+                print(f"Warning: Could not fetch nonce for {self._active_address}: {e}. Nonce will not be set automatically.")
+
+        if overrides:
+            tx_params.update(overrides)
+        
+        return tx_params
+
     def add_liquidity(
         self,
         token0_address: str,
@@ -343,33 +377,32 @@ class InfinityPoolsSDK:
 
         # 'drain' implies 100% removal, so liquidity_percentage is informational here.
         if liquidity_percentage != Decimal("1"):
-            print(f"Warning: 'drain' function removes 100% of liquidity; liquidity_percentage ({liquidity_percentage*100}%) is ignored for the on-chain call.")
+            print(f"Warning: 'collect' function removes 100% of liquidity; liquidity_percentage ({liquidity_percentage*100}%) is ignored for the on-chain call.")
 
         actual_recipient = recipient if recipient else self._active_address
 
         try:
-            print(f"Preparing 'drain' transaction for token ID: {token_id} to recipient: {actual_recipient}")
+            print(f"Preparing 'collect' transaction for token ID: {token_id} to recipient: {actual_recipient}")
             
             tx_params = self._prepare_transaction_params(transaction_overrides)
             
-            # Prepare the 'drain' function call
-            transaction = self.periphery_contract.functions.drain(
-                token_id,
-                actual_recipient
-            ).build_transaction(tx_params)
+            # Prepare the 'collect' function call
+            transaction = self.periphery_contract.functions.collect(token_id, actual_recipient).build_transaction(tx_params)
 
-            # Sign and send the transaction
-            print(f"Signing and sending 'drain' transaction for token {token_id}...")
-            signed_tx = self.connector.sign_transaction(transaction)
-            tx_hash = self.connector.send_raw_transaction(signed_tx.rawTransaction)
-            print(f"'drain' transaction sent. Hash: {tx_hash.hex()}. Waiting for receipt...")
-            receipt = self.connector.wait_for_transaction_receipt(tx_hash)
-            print(f"'drain' transaction mined. Receipt status: {receipt.get('status')}")
+            # Send the transaction using the connector's method which handles signing
+            print(f"Sending 'collect' transaction for token {token_id} via connector...")
+            tx_hash_hex_str = self.connector.send_transaction(transaction)  # This returns a hex string as per connector.py
+            print(f"'collect' transaction sent. Hash: {tx_hash_hex_str}. Waiting for receipt...")
+            
+            # Wait for the transaction receipt using the connector's method, passing the hex string
+            # The connector's method is wait_for_transaction, which returns a dict representation of the receipt.
+            receipt_dict = self.connector.wait_for_transaction(tx_hash_hex_str)
+            # The 'status' key should be directly available in the receipt dictionary.
+            # Common status values are 1 (success) or 0 (failure).
+            receipt_status = receipt_dict.get('status') 
+            print(f"'collect' transaction mined. Receipt status: {receipt_status}")
 
-            return {"tx_hash": tx_hash.hex(), "receipt": receipt, "status": receipt.get("status")}
-            tx_receipt = self.connector.wait_for_transaction(tx_hash)
-
-            return {"tx_hash": tx_hash.hex() if hasattr(tx_hash, "hex") else tx_hash.decode("utf-8") if isinstance(tx_hash, bytes) else tx_hash, "receipt": tx_receipt}
+            return {"tx_hash": tx_hash_hex_str, "receipt": receipt_dict, "status": receipt_status}
 
         except Exception as e:
             raise RuntimeError(f"Failed to remove liquidity for token {token_id}: {e}")
