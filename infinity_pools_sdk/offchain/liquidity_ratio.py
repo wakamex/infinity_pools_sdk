@@ -85,7 +85,7 @@ Derived Prices:
 
 import json
 import sys
-from decimal import Decimal, getcontext
+from decimal import ROUND_HALF_UP, Context, Decimal, getcontext
 from typing import Optional, Tuple
 
 import requests
@@ -127,27 +127,108 @@ DEFAULT_LOWER_PRICE = "0"
 DEFAULT_UPPER_PRICE = "Infinity"
 API_BASE_URL = "https://prod.api.infinitypools.finance/liquidityRatio"
 
+# Constants for tick-to-price conversion
+TICK_PRICE_PRECISION = 100  # Internal precision for decimal calculations
+LOWER_PRICE_DECIMAL_PLACES = 64
+UPPER_PRICE_DECIMAL_PLACES = 63
+# Uniswap V3-style ticks usually range from -887272 to 887272.
+# These can be used as min/max if needed, but the "infinity" endpoint logic
+# here will primarily rely on lower_tick/upper_tick being None or default
+# string price inputs "0" and "Infinity".
+
+def tick_to_price_string(tick: int, num_decimal_places: int, precision: int = TICK_PRICE_PRECISION) -> str:
+    """Convert a Uniswap V3-style tick to its corresponding price string.
+
+    The price is rounded to a specific number of decimal places.
+    Price = 1.0001 ^ tick.
+
+    Args:
+        tick: The tick value (integer).
+        num_decimal_places: The number of decimal places to round the price to.
+        precision: The internal decimal precision for calculation.
+
+    Returns:
+        A string representation of the price.
+    """
+    # Use a local context for precision to avoid changing global context
+    ctx = Context(prec=precision)
+    base = ctx.create_decimal("1.0001")
+
+    price_calculated = ctx.power(base, ctx.create_decimal(tick))
+
+    quantizer_str = '1e-' + str(num_decimal_places)
+    quantizer = ctx.create_decimal(quantizer_str)
+
+    price_rounded = price_calculated.quantize(quantizer, rounding=ROUND_HALF_UP)
+
+    return str(price_rounded)
+
+
 def fetch_liquidity_ratio(
     token0_address: str,
     token1_address: str,
-    lower_price: str = DEFAULT_LOWER_PRICE,
-    upper_price: str = DEFAULT_UPPER_PRICE,
+    lower_price_str_input: str = DEFAULT_LOWER_PRICE, # Renamed to avoid confusion
+    upper_price_str_input: str = DEFAULT_UPPER_PRICE, # Renamed to avoid confusion
     base_size: Optional[str] = None,
     quote_size: Optional[str] = None,
     api_base_url: str = API_BASE_URL,
+    lower_tick: Optional[int] = None,
+    upper_tick: Optional[int] = None,
 ) -> Optional[Tuple[Decimal, Decimal]]:
     """Fetch liquidity ratio from the Infinity Pools API.
-    
-    Returns: A tuple (token0_amount, token1_amount) or None if an error occurs.
-    """
-    # API URL format: /liquidityRatio/{token1_address}/{token0_address}/{lower_price}/{upper_price}
-    url = f"{api_base_url}/{token1_address}/{token0_address}/{lower_price}/{upper_price}"
-    
-    # Prepare query parameters
-    query_params = {}
-    if base_size: query_params["baseSize"] = base_size
-    if quote_size: query_params["quoteSize"] = quote_size
 
+    Constructs the URL based on whether ticks or string prices are provided.
+    - If lower_tick and upper_tick are provided, they are converted to high-precision
+      decimal strings and used in the path:
+      /liquidityRatio/{token0_address}/{token1_address}/{lower_price_decimal_str}/{upper_price_decimal_str}
+    - If ticks are not provided AND string prices are "0" and "Infinity" (default),
+      the /infinity endpoint is used:
+      /liquidityRatio/{token0_address}/{token1_address}/infinity
+    - Otherwise (custom string prices, no ticks), query parameters are used:
+      /liquidityRatio/{token0_address}/{token1_address}?lowerPrice=X&upperPrice=Y
+
+    Args:
+        token0_address: Contract address of the first token.
+        token1_address: Contract address of the second token.
+        lower_price_str_input: Lower price boundary as a string (e.g., "0", "1000.5").
+                               Defaults to "0".
+        upper_price_str_input: Upper price boundary as a string (e.g., "Infinity", "2000.75").
+                               Defaults to "Infinity".
+        base_size: Optional amount of token0.
+        quote_size: Optional amount of token1.
+        api_base_url: Base URL for the API endpoint.
+        lower_tick: Optional lower tick for the price range.
+        upper_tick: Optional upper tick for the price range.
+
+    Returns:
+        A tuple (quote_size_decimal, base_size_decimal) or None if an error occurs.
+        Note: The API returns `baseSize` and `quoteSize`. The tuple order might seem
+        reversed, but it aligns with typical (amount_token1, amount_token0) pattern if
+        token0 is base and token1 is quote.
+    """
+    query_params = {}
+    if base_size:
+        query_params["baseSize"] = base_size
+    if quote_size:
+        query_params["quoteSize"] = quote_size
+
+    # Determine the API URL path structure
+    if lower_tick is not None and upper_tick is not None:
+        # Finite range specified by ticks, convert ticks to high-precision price strings
+        actual_lower_price_str = tick_to_price_string(lower_tick, LOWER_PRICE_DECIMAL_PLACES)
+        actual_upper_price_str = tick_to_price_string(upper_tick, UPPER_PRICE_DECIMAL_PLACES)
+        url = f"{api_base_url}/{token0_address}/{token1_address}/{actual_lower_price_str}/{actual_upper_price_str}"
+    elif lower_price_str_input == DEFAULT_LOWER_PRICE and upper_price_str_input == DEFAULT_UPPER_PRICE:
+        # Full range (0 to Infinity) uses the /infinity endpoint
+        url = f"{api_base_url}/{token0_address}/{token1_address}/infinity"
+    else:
+        # Custom string prices, use query parameters
+        url = f"{api_base_url}/{token0_address}/{token1_address}"
+        if lower_price_str_input != DEFAULT_LOWER_PRICE:
+            query_params["lowerPrice"] = lower_price_str_input
+        if upper_price_str_input != DEFAULT_UPPER_PRICE:
+            query_params["upperPrice"] = upper_price_str_input
+            
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0",
         "Accept": "application/json",
@@ -155,18 +236,28 @@ def fetch_liquidity_ratio(
         "Referer": "https://infinitypools.finance/",
     }
 
-    # Log the URL with query parameters
-    log_url = url + ("?" + "&".join([f"{k}={v}" for k, v in query_params.items()]) if query_params else "")
+    log_url = url + (("?" + "&".join([f"{k}={v}" for k, v in query_params.items()])) if query_params else "")
     print(f"Requesting URL for ratio: {log_url}", file=sys.stderr)
-    
+
     try:
-        response = requests.get(url, headers=headers, params=query_params or None)
-        response.raise_for_status()
+        response = requests.get(url, headers=headers, params=query_params if query_params else None)
+        response.raise_for_status()  # Raises HTTPError for bad responses (4XX or 5XX)
         data = response.json()
+        # The API returns "baseSize" and "quoteSize".
         return Decimal(data["quoteSize"]), Decimal(data["baseSize"])
-    except Exception as e:
-        print(f"Error fetching liquidity ratio: {e}\nURL: {log_url}", file=sys.stderr)
-        return None
+    except HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err} - {response.status_code} {response.reason}\nURL: {log_url}\nResponse text: {response.text}", file=sys.stderr)
+    except requests.ConnectionError as conn_err:
+        print(f"Connection error occurred: {conn_err}\nURL: {log_url}", file=sys.stderr)
+    except requests.Timeout as timeout_err:
+        print(f"Timeout error occurred: {timeout_err}\nURL: {log_url}", file=sys.stderr)
+    except requests.RequestException as req_err:
+        print(f"An unexpected error occurred with the request: {req_err}\nURL: {log_url}", file=sys.stderr)
+    except json.JSONDecodeError:
+        print(f"Error decoding JSON response from server.\nURL: {log_url}\nResponse text: {response.text if 'response' in locals() else 'N/A'}", file=sys.stderr)
+    except Exception as e: # Catch any other unexpected errors
+        print(f"An unexpected error occurred: {e}\nURL: {log_url}", file=sys.stderr)
+    return None
 
 def main():
     import argparse

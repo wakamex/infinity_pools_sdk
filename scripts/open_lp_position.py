@@ -283,17 +283,16 @@ def main():
             ratio_data = fetch_liquidity_ratio(
                 token0_address=args.token0_address,
                 token1_address=args.token1_address,
-                lower_price=lower_price_api_fmt,
-                upper_price=upper_price_api_fmt,
+                lower_price_str_input=lower_price_api_fmt,
+                upper_price_str_input=upper_price_api_fmt,
                 base_size=api_base_size_str, # Send smallest unit as string
                 quote_size=None,
             )
             if ratio_data is None:
                 logger.error("  Error: fetch_liquidity_ratio returned None unexpectedly. Cannot calculate amount1_desired.")
                 return
-            # API returns (quote_size, base_size) but we're providing token0 (base) as input
-            # so we need to swap the order when unpacking for correct variable names
-            quote_size_from_api_su, base_size_from_api_su = ratio_data
+            # API is assumed to return amounts in smallest units; SDK converts them to Decimal.
+            base_size_from_api_su, quote_size_from_api_su = ratio_data 
             logger.info(f"  API returned: baseSize (smallest units Decimal)={base_size_from_api_su}, quoteSize (smallest units Decimal)={quote_size_from_api_su}")
             
             # Convert API response (smallest units) to standard units for the SDK's add_liquidity function
@@ -316,17 +315,16 @@ def main():
             ratio_data = fetch_liquidity_ratio(
                 token0_address=args.token0_address,
                 token1_address=args.token1_address,
-                lower_price=lower_price_api_fmt,
-                upper_price=upper_price_api_fmt,
+                lower_price_str_input=lower_price_api_fmt,
+                upper_price_str_input=upper_price_api_fmt,
                 base_size=None,
                 quote_size=api_quote_size_str, # Send smallest unit as string
             )
             if ratio_data is None:
                 logger.error("  Error: fetch_liquidity_ratio returned None unexpectedly. Cannot calculate amount0_desired.")
                 return
-            # API returns (quote_size, base_size) but we're providing token1 (quote) as input
-            # so we need to swap the order when unpacking for correct variable names
-            quote_size_from_api_su, base_size_from_api_su = ratio_data
+            # API is assumed to return amounts in smallest units; SDK converts them to Decimal.
+            base_size_from_api_su, quote_size_from_api_su = ratio_data
             logger.info(f"  API returned: baseSize (smallest units Decimal)={base_size_from_api_su}, quoteSize (smallest units Decimal)={quote_size_from_api_su}")
 
             # Convert API response (smallest units) to standard units for the SDK's add_liquidity function
