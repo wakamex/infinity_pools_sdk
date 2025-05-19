@@ -329,115 +329,44 @@ class InfinityPoolsSDK:
     def remove_liquidity(
         self,
         token_id: int,
-        liquidity_percentage: Decimal = Decimal("1"),
+        liquidity_percentage: Decimal = Decimal("1"),  
         recipient: Optional[str] = None,
-        deadline: Optional[int] = None,
-        amount0_min: int = 0,  # Slippage protection for token0
-        amount1_min: int = 0,  # Slippage protection for token1
-        current_position_liquidity_raw: Optional[int] = None, # If provided, bypasses on-chain positions() call for liquidity
+        deadline: Optional[int] = None,  
+        amount0_min: int = 0,  
+        amount1_min: int = 0,  
+        current_position_liquidity_raw: Optional[int] = None, 
         transaction_overrides: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Remove a percentage of liquidity from a position and collect fees."""
+        """Remove 100% of liquidity and fees from a position using the 'drain' function."""
         if not self.connector.account and not self.connector.impersonated_address:
             raise ValueError("No account loaded and no impersonation address configured for transaction.")
 
-        if not (Decimal("0") < liquidity_percentage <= Decimal("1")):
-            raise ValueError("Liquidity percentage must be between 0 (exclusive) and 1 (inclusive).")
+        # 'drain' implies 100% removal, so liquidity_percentage is informational here.
+        if liquidity_percentage != Decimal("1"):
+            print(f"Warning: 'drain' function removes 100% of liquidity; liquidity_percentage ({liquidity_percentage*100}%) is ignored for the on-chain call.")
 
         actual_recipient = recipient if recipient else self._active_address
-        actual_deadline = deadline if deadline else int(time.time()) + 20 * 60  # 20 minutes from now
 
         try:
-            current_liquidity: int
-            if current_position_liquidity_raw is not None:
-                current_liquidity = current_position_liquidity_raw
-                print(f"Using provided offchain liquidity for token {token_id}: {current_liquidity}")
-            else:
-                # 1. Get current position liquidity via on-chain call
-                print(f"Attempting on-chain call to periphery_contract.functions.positions({token_id}) to get liquidity...")
-                # The 'positions' function in Uniswap V3 NFPM typically returns a struct: 
-                # (uint96 nonce, address operator, address token0, address token1, uint24 fee, 
-                #  int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, 
-                #  uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)
-                # The SDK periphery_contract might have a slightly different ABI or return structure.
-                # We are assuming it returns at least the liquidity at index 7 if it's a flat tuple, 
-                # or if it's a tuple containing a single struct, that struct's 8th field (index 7) is liquidity.
-                position_data_tuple = self.periphery_contract.functions.positions(token_id).call()
-                
-                # Check if position_data_tuple is a list/tuple and has content
-                if not isinstance(position_data_tuple, (list, tuple)) or not position_data_tuple:
-                    raise ValueError(f"Unexpected or empty data structure from positions({token_id}): {position_data_tuple}")
-
-                # If the result is a tuple containing a single struct (common pattern for structs returned from Solidity)
-                if len(position_data_tuple) == 1 and isinstance(position_data_tuple[0], (list, tuple)):
-                    position_info = position_data_tuple[0]
-                else: # Assume it's a flat tuple of the struct's fields
-                    position_info = position_data_tuple
-                
-                if len(position_info) < 8:
-                    raise ValueError(f"Position info for token {token_id} does not contain enough fields (expected at least 8 for liquidity): {position_info}")
-                current_liquidity = position_info[7]  # liquidity is the 8th field (index 7)
-
-            liquidity_to_remove: int
-            if current_liquidity == 0:
-                # If there's no liquidity, we might still want to attempt a collect operation.
-                # However, decreaseLiquidity would fail or be a no-op.
-                liquidity_to_remove = 0
-            else:
-                liquidity_to_remove = int(Decimal(current_liquidity) * liquidity_percentage)
-                if liquidity_percentage == Decimal("1"):  # Ensure all is removed if 100%
-                    liquidity_to_remove = current_liquidity
-
-            calls_to_make = []
-
-            # 2. Prepare decreaseLiquidity call data (if there's liquidity to remove)
-            if liquidity_to_remove > 0:
-                decrease_params = (
-                    token_id,
-                    liquidity_to_remove,
-                    amount0_min,
-                    amount1_min,
-                    actual_deadline,
-                )
-                decrease_call_data = self.periphery_contract.encodeABI(fn_name="decreaseLiquidity", args=[decrease_params])
-                calls_to_make.append(decrease_call_data)
-
-            # 3. Prepare collect call data (always attempt to collect fees)
-            collect_params = (
+            print(f"Preparing 'drain' transaction for token ID: {token_id} to recipient: {actual_recipient}")
+            
+            tx_params = self._prepare_transaction_params(transaction_overrides)
+            
+            # Prepare the 'drain' function call
+            transaction = self.periphery_contract.functions.drain(
                 token_id,
-                actual_recipient,
-                MAX_UINT128,  # amount0Max: collect all available
-                MAX_UINT128,  # amount1Max: collect all available
-            )
-            collect_call_data = self.periphery_contract.encodeABI(fn_name="collect", args=[collect_params])
-            calls_to_make.append(collect_call_data)
+                actual_recipient
+            ).build_transaction(tx_params)
 
-            if not calls_to_make:
-                # This should only happen if somehow collect_call_data wasn't added, defensive.
-                return {"message": "No actions to perform (e.g., zero liquidity and no collect).", "liquidity_removed_attempted": liquidity_to_remove}
+            # Sign and send the transaction
+            print(f"Signing and sending 'drain' transaction for token {token_id}...")
+            signed_tx = self.connector.sign_transaction(transaction)
+            tx_hash = self.connector.send_raw_transaction(signed_tx.rawTransaction)
+            print(f"'drain' transaction sent. Hash: {tx_hash.hex()}. Waiting for receipt...")
+            receipt = self.connector.wait_for_transaction_receipt(tx_hash)
+            print(f"'drain' transaction mined. Receipt status: {receipt.get('status')}")
 
-            # 4. Prepare and send multicall
-            tx_params = {
-                "from": self._active_address,
-                "gas": 1000000,  # Default gas limit, consider making this configurable or estimating
-            }
-
-            # Add nonce if not on a local network (e.g., Ganache, Hardhat local node)
-            # Chain ID 1337 is often used by Ganache.
-            if hasattr(self.connector.w3.eth, 'chain_id') and self.connector.w3.eth.chain_id != 1337 and getattr(self.connector, "network_type", None) != "local":
-                tx_params["nonce"] = self.connector.w3.eth.get_transaction_count(self._active_address)
-
-            # Apply any transaction overrides
-            if transaction_overrides:
-                tx_params.update(transaction_overrides)
-
-            multicall_fn = self.periphery_contract.functions.multicall(actual_deadline, calls_to_make)
-
-            # Build the transaction first
-            tx_object = multicall_fn.build_transaction(tx_params)
-
-            # Then send it
-            tx_hash = self.connector.send_transaction(tx_object)
+            return {"tx_hash": tx_hash.hex(), "receipt": receipt, "status": receipt.get("status")}
             tx_receipt = self.connector.wait_for_transaction(tx_hash)
 
             return {"tx_hash": tx_hash.hex() if hasattr(tx_hash, "hex") else tx_hash.decode("utf-8") if isinstance(tx_hash, bytes) else tx_hash, "receipt": tx_receipt}

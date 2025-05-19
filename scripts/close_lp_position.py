@@ -41,35 +41,42 @@ def get_first_open_lp_token_id(owner_address: str) -> tuple[Optional[int], Optio
             print(f"{k}: {v}")
         if isinstance(position, dict) and position.get("status") == "OPEN":
             lp_num = position.get("lpNum")
-            if isinstance(lp_num, int):
-                print(f"Found open position with lpNum (token_id): {lp_num}")
-                # --- Placeholder for liquidity conversion --- 
-                # You MUST determine which field (e.g., 'lockedQuoteSize', 'lockedBaseSize')
-                # represents the liquidity and how to convert it to uint128.
-                # This involves knowing the token's decimals.
-                # Example assuming 'lockedQuoteSize' and 18 decimals for the relevant token:
+            if isinstance(lp_num, int) and position.get("status") == "OPEN":
+                print(f"Found OPEN position with lpNum (token_id): {lp_num}")
                 raw_liquidity = None
-                locked_quote_size_str = position.get("lockedQuoteSize")
-                if locked_quote_size_str is not None: # Ensure the key exists
-                    try:
-                        # Convert string from API (if it's string) to Decimal, then to raw int
-                        locked_quote_size_decimal = Decimal(str(locked_quote_size_str))
-                        # ** REPLACE 18 with the correct number of decimals for the token **
-                        # ** that 'lockedQuoteSize' or your chosen field refers to. **
-                        token_decimals = 18 # Example, replace this!
-                        raw_liquidity = int(locked_quote_size_decimal * (Decimal(10)**token_decimals))
-                        print(f"Derived raw liquidity (uint128 placeholder): {raw_liquidity} from field 'lockedQuoteSize': {locked_quote_size_str}")
-                    except Exception as e:
-                        print(f"Could not convert liquidity field for position {lp_num}: {e}. API value: {locked_quote_size_str}")
-                        # Decide if you want to return None, None or attempt on-chain call by returning (lp_num, None)
-                        # Returning (lp_num, None) will make the SDK try the on-chain `positions()` call.
-                        return lp_num, None # Or return None, None to halt
-                else:
-                     print(f"Warning: 'lockedQuoteSize' (or your chosen field) not found in position data for {lp_num}. Cannot determine off-chain liquidity.")
-                     # Fallback to on-chain call by returning None for raw_liquidity
-                     return lp_num, None
+                try:
+                    locked_base_size_str = str(position.get("lockedBaseSize", "0"))
+                    locked_quote_size_str = str(position.get("lockedQuoteSize", "0"))
+
+                    locked_base_decimal = Decimal(locked_base_size_str)
+                    locked_quote_decimal = Decimal(locked_quote_size_str)
+
+                    # TODO: Dynamically fetch or correctly map token decimals based on asset addresses
+                    # position.get("baseAsset") and position.get("quoteAsset")
+                    # For now, assuming 18 decimals for both as sUSDe and wstETH typically have 18.
+                    base_token_decimals = 18
+                    quote_token_decimals = 18
+
+                    if locked_base_decimal > Decimal(0):
+                        raw_liquidity = int(locked_base_decimal * (Decimal(10)**base_token_decimals))
+                        print(f"Using lockedBaseSize: {locked_base_decimal} (raw: {raw_liquidity}) for position {lp_num}")
+                    elif locked_quote_decimal > Decimal(0):
+                        raw_liquidity = int(locked_quote_decimal * (Decimal(10)**quote_token_decimals))
+                        print(f"Using lockedQuoteSize: {locked_quote_decimal} (raw: {raw_liquidity}) for position {lp_num}")
+                    else:
+                        print(f"Warning: Both lockedBaseSize and lockedQuoteSize are zero or not found for OPEN position {lp_num}. Cannot determine off-chain liquidity.")
+                        # Fallback to on-chain call by returning None for raw_liquidity, or treat as zero liquidity.
+                        # Forcing removal of 0 liquidity if this occurs.
+                        raw_liquidity = 0 
+
+                    return lp_num, raw_liquidity
                 
-                return lp_num, raw_liquidity
+                except Exception as e:
+                    print(f"Error processing liquidity fields for position {lp_num}: {e}. API values: base='{position.get("lockedBaseSize")}', quote='{position.get("lockedQuoteSize")}'")
+                    # Fallback to on-chain call attempt
+                    return lp_num, None
+            elif isinstance(lp_num, int):
+                print(f"Skipping position {lp_num} with status: {position.get('status')}")
             else:
                 print(f"Found open position, but 'lpNum' is not an int: {position}")
 
