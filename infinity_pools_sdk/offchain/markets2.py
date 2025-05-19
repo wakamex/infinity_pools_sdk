@@ -1,5 +1,67 @@
+"""Fetches and displays data for all available markets from the Infinity Pools API, with the 'adjustPrice=true' parameter.
+
+This script queries the `/markets` endpoint, including `adjustPrice=true` in the
+request parameters. It prints the JSON response, which is typically a list of
+market objects. The 'adjustPrice' parameter may influence the returned price
+data or other calculated metrics.
+
+Example run output:
+--------------------------------------------
+Status Code: 200
+Full requested URL: https://prod.api.infinitypools.finance/markets?adjustPrice=true
+Response JSON:
+[
+  {
+    "chainId": 8453,
+    "goodTillBlkno": 30444826,
+    "tokens": [
+      "0x211cc4dd073734da055fbf44a2b4667d5e5fe5d2",
+      "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+    ],
+    "defaultBase": "0x211cc4dd073734da055fbf44a2b4667d5e5fe5d2",
+    "defaultQuote": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "address": "0x2175a80b99ff2e945ccce92fd0365f0cb5c5e98d",
+    "price": 1.174585720074999,
+    "volume24H": 308184.42353792733,
+    "change24H": 0.17737806862077973,
+    "openInterest": 0.0,
+    "tvl": 2535720.5032572355,
+    "apr7D": 9.009764798839365,
+    "utilization": 0.46581645693794743
+  },
+  {
+    "chainId": 8453,
+    "goodTillBlkno": 30444826,
+    "tokens": [
+      "0x211cc4dd073734da055fbf44a2b4667d5e5fe5d2",
+      "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452"
+    ],
+    "defaultBase": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
+    "defaultQuote": "0x211cc4dd073734da055fbf44a2b4667d5e5fe5d2",
+    "address": "0xc3a51f01bc43b1a41b1a1ccaa64c0578cf40ba1f",
+    "price": 0.00040197763392075755,
+    "volume24H": 273059.3763363039,
+    "change24H": -1.0798217310076028,
+    "openInterest": 0.0,
+    "tvl": 1090392.3867065802,
+    "apr7D": 16.9282816799015,
+    "utilization": 0.3856882798222398
+  }
+]
+--------------------------------------------
+"""
+
+import json  # For pretty printing the JSON response
+
 import requests
-import json # For pretty printing the JSON response
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+)
+from requests.exceptions import (
+    HTTPError,
+    RequestException,
+    Timeout,
+)
 
 # Base URL for the markets endpoint
 url = "https://prod.api.infinitypools.finance/markets"
@@ -7,7 +69,7 @@ url = "https://prod.api.infinitypools.finance/markets"
 # Parameters to be sent in the query string
 # requests will append this to the URL as ?adjustPrice=true
 params = {
-    "adjustPrice": "true" # Note: parameter values are typically strings
+    "adjustPrice": "true"  # Note: parameter values are typically strings
 }
 
 headers = {
@@ -22,7 +84,7 @@ headers = {
     "Sec-Fetch-Dest": "empty",
     "Sec-Fetch-Mode": "cors",
     "Sec-Fetch-Site": "same-site",
-    "TE": "trailers"
+    "TE": "trailers",
 }
 
 try:
@@ -31,14 +93,14 @@ try:
     response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
 
     print(f"Status Code: {response.status_code}")
-    print(f"Full requested URL: {response.url}") # You can print this to see the final URL requests constructed
+    print(f"Full requested URL: {response.url}")  # You can print this to see the final URL requests constructed
 
     # Check if the response is JSON
     if "application/json" in response.headers.get("Content-Type", ""):
         try:
             data = response.json()
             print("Response JSON:")
-            print(json.dumps(data, indent=2)) # Pretty print JSON
+            print(json.dumps(data, indent=2))  # Pretty print JSON
         except json.JSONDecodeError:
             print("Failed to decode JSON. Response Text:")
             print(response.text)
@@ -46,12 +108,12 @@ try:
         print("Response Text:")
         print(response.text)
 
-except requests.exceptions.HTTPError as errh:
+except HTTPError as errh:
     print(f"Http Error: {errh}")
     print(f"Response content: {response.content.decode(errors='ignore')}")
-except requests.exceptions.ConnectionError as errc:
+except RequestsConnectionError as errc:
     print(f"Error Connecting: {errc}")
-except requests.exceptions.Timeout as errt:
+except Timeout as errt:
     print(f"Timeout Error: {errt}")
-except requests.exceptions.RequestException as err:
+except RequestException as err:
     print(f"Oops: Something Else: {err}")

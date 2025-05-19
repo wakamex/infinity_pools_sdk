@@ -9,40 +9,29 @@ from ..utils.config import NETWORKS, ContractConfig  # First-party
 
 
 class InfinityPoolsConnector:
+    """Handles connection to an Ethereum node and account management."""
+    
     def __init__(self, 
-                 rpc_url: Optional[str] = None,
-                 network: str = 'mainnet',
-                 private_key: Optional[str] = None,
-                 headers: Optional[Dict[str, str]] = None):
-        """Initialize the connector with RPC URL and optional private key.
+                 w3_instance: Web3,
+                 network: str = 'mainnet', # network string is still useful for context
+                 private_key: Optional[str] = None):
+        """Initialize the connector with a Web3 instance and optional private key.
         
         Args:
-            rpc_url: The RPC URL to connect to. If None, uses environment variables.
-            network: The network to connect to (e.g., 'mainnet', 'goerli').
+            w3_instance: A pre-configured Web3 instance.
+            network: The network name (e.g., 'mainnet', 'goerli'). Important for network-specific logic like POA middleware.
             private_key: Optional private key for signing transactions.
-            headers: Optional HTTP headers to include in RPC requests, useful for Tenderly impersonation.
         """
         self.network = network
-        self.config = ContractConfig(network)
+        self.config = ContractConfig(network) # ContractConfig might still use network string
         
-        # Setup Web3 connection
-        if rpc_url is None:
-            rpc_url = self._get_default_rpc()
-            
-        # Create HTTP provider with optional headers
-        if headers:
-            provider = HTTPProvider(rpc_url, request_kwargs={"headers": headers})
-        else:
-            provider = HTTPProvider(rpc_url)
-            
-        self.w3 = Web3(provider)
-        
-        # Store impersonation info if provided
-        self.impersonated_address = headers.get("X-Tenderly-Force-Root-Account") if headers else None
-        
-        # Inject POA middleware if a common POA network is detected or if URL suggests it
-        if self.network.lower() in ['polygon', 'mumbai', 'bsc', 'goerli', 'sepolia'] or \
-           any(keyword in rpc_url.lower() for keyword in ['matic', 'bsc', 'bnb', 'poa', 'ankr']):
+        self.w3: Web3 = w3_instance
+        self.impersonated_address: Optional[str] = None # If impersonation is done by configuring w3_instance provider, this might not be needed or set differently.
+
+        # Inject POA middleware if a common POA network is detected
+        # This check relies on the network name. 
+        # If POA detection previously relied on rpc_url structure, this might need review.
+        if self.network.lower() in ['polygon', 'mumbai', 'bsc', 'goerli', 'sepolia', 'base']:
             self.w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
         
         # Setup account if private key provided
@@ -50,23 +39,14 @@ class InfinityPoolsConnector:
         if private_key:
             self.load_account(private_key)
     
-    def _get_default_rpc(self) -> str:
-        """Get default RPC URL from environment variables."""
-        import os
-        env_var = f"INFINITY_POOLS_RPC_{self.network.upper()}"
-        rpc_url = os.environ.get(env_var)
-        if not rpc_url:
-            raise ValueError(f"No RPC URL provided and no {env_var} environment variable found")
-        return rpc_url
-    
-    def load_account(self, private_key: str) -> LocalAccount:
-        """Load an Ethereum account from a private key."""
+    def load_account(self, private_key: str):
+        """Load an account from a private key."""
         if private_key.startswith('0x'):
             private_key = private_key[2:]
         self.account = Account.from_key(private_key)
         return self.account
     
-    def get_contract_instance(self, contract_name: str, address: Optional[str] = None) -> Any: # Changed from web3.contract.Contract to Any
+    def get_contract_instance(self, contract_name: str, address: Optional[str] = None) -> Any: 
         """Get a Web3 contract instance."""
         if address is None:
             address = self.config.get_address(contract_name)

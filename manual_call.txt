@@ -1,0 +1,11 @@
+Function: addLiquidity((address,address,bool,int256,int256,uint256,uint256,uint256,uint256))
+#	Name	Type	Data
+0	params.token0	address	0x211Cc4DD073734dA055fbF44a2b4667d5E5fE5d2
+0	params.token1	address	0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452
+0	params.useVaultDeposit	bool	false
+0	params.startEdge	int256	-807
+0	params.stopEdge	int256	-767
+0	params.amount0Desired	uint256	100000000000000000
+0	params.amount1Desired	uint256	256487091742579122119
+0	params.amount0Min	uint256	990000000000000000
+0	params.amount1Min	uint256	253922220825153330898
