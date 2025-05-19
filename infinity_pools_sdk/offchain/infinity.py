@@ -81,31 +81,27 @@ Derived Prices:
   1 token0 (sUSDe) = 0.000390... token1 (wstETH)
 """
 
+"""Fetches the current liquidity ratio for a given token pair from the Infinity Pools API."""
+
 import json
 import sys
 from decimal import Decimal, getcontext
-from typing import Optional
+from typing import Optional, Tuple
 
 import requests
-from requests.exceptions import (
-    ConnectionError as RequestsConnectionError,
-)
-from requests.exceptions import (
-    HTTPError,
-    RequestException,
-    Timeout,
-)
+from requests.exceptions import HTTPError
 
 # Set precision for Decimal calculations
 getcontext().prec = 50
 
-# Token Addresses
+# Token Addresses 
 SUSD_E_ADDRESS = "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452"
 WST_ETH_ADDRESS = "0x211cc4dd073734da055fbf44a2b4667d5e5fe5d2"
 USDC_BASE_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 CRVUSD_BASE_ADDRESS = "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E"
 WETH_BASE_ADDRESS = "0x4200000000000000000000000000000000000006"
 
+# Market configurations
 MARKETS = {
     "sUSDe/wstETH": {
         "token0_address": SUSD_E_ADDRESS,
@@ -136,68 +132,41 @@ def fetch_liquidity_ratio(
     token1_address: str,
     lower_price: str = DEFAULT_LOWER_PRICE,
     upper_price: str = DEFAULT_UPPER_PRICE,
-    base_size: Optional[str] = None,  # New parameter
-    quote_size: Optional[str] = None, # New parameter
+    base_size: Optional[str] = None,
+    quote_size: Optional[str] = None,
     api_base_url: str = API_BASE_URL,
-) -> tuple[Decimal, Decimal] | None:
+) -> Optional[Tuple[Decimal, Decimal]]:
     """Fetch liquidity ratio from the Infinity Pools API.
-
-    Args:
-        token0_address: Address of token0.
-        token1_address: Address of token1.
-        lower_price: Lower price of the range for the API query.
-        upper_price: Upper price of the range for the API query.
-        base_size: Optional amount of base_size to query with.
-        quote_size: Optional amount of quote_size to query with.
-        api_base_url: The base URL for the API.
-
-    Returns:
-        A tuple (quote_size_token0, base_size_token1) or None if an error occurs.
+    
+    Returns: A tuple (token0_amount, token1_amount) or None if an error occurs.
     """
-    # Construct the URL with token addresses and price range in the path
-    # Note: API expects token addresses in reverse order compared to our function parameter names
-    # Format: /liquidityRatio/{token1_address}/{token0_address}/{lower_price}/{upper_price}
+    # API URL format: /liquidityRatio/{token1_address}/{token0_address}/{lower_price}/{upper_price}
     url = f"{api_base_url}/{token1_address}/{token0_address}/{lower_price}/{upper_price}"
     
     # Prepare query parameters
     query_params = {}
-    if base_size:
-        query_params["baseSize"] = base_size
-    if quote_size:
-        query_params["quoteSize"] = quote_size
+    if base_size: query_params["baseSize"] = base_size
+    if quote_size: query_params["quoteSize"] = quote_size
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0",
-        "Accept": "application/json, text/plain, */*",
+        "Accept": "application/json",
         "Origin": "https://infinitypools.finance",
         "Referer": "https://infinitypools.finance/",
     }
 
-    # Log the URL with query parameters if any
-    log_url = url
-    if query_params:
-        log_url += "?" + "&".join([f"{k}={v}" for k, v in query_params.items()])
+    # Log the URL with query parameters
+    log_url = url + ("?" + "&".join([f"{k}={v}" for k, v in query_params.items()]) if query_params else "")
     print(f"Requesting URL for ratio: {log_url}", file=sys.stderr)
     
     try:
-        response = requests.get(url, headers=headers, params=query_params if query_params else None)
+        response = requests.get(url, headers=headers, params=query_params or None)
         response.raise_for_status()
         data = response.json()
-        
-        response_quote_size_token0 = Decimal(data["quoteSize"])
-        response_base_size_token1 = Decimal(data["baseSize"])
-        return response_quote_size_token0, response_base_size_token1
-    except HTTPError as errh:
-        print(f"Http Error fetching ratio: {errh}\nURL: {log_url}\nResponse: {errh.response.text if errh.response else 'No response text'}", file=sys.stderr)
-    except requests.exceptions.RequestException as e:
-        print(f"Error during API request for ratio: {e}\nURL: {log_url}", file=sys.stderr)
-    except json.JSONDecodeError:
-        print(f"Error: Could not decode JSON response from API for ratio.\nURL: {log_url}", file=sys.stderr)
-    except KeyError as e:
-        print(f"Error: Missing key {e} in API response for ratio.\nURL: {log_url}", file=sys.stderr)
+        return Decimal(data["quoteSize"]), Decimal(data["baseSize"])
     except Exception as e:
-        print(f"An unexpected error occurred while fetching ratio: {e}\nURL: {log_url}", file=sys.stderr)
-    return None
+        print(f"Error fetching liquidity ratio: {e}\nURL: {log_url}", file=sys.stderr)
+        return None
 
 def main():
     import argparse
@@ -205,64 +174,30 @@ def main():
         description="Fetch liquidity ratio for a token pair and price range.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
+    
+    # Market selection arguments
     market_group = parser.add_argument_group('Market Selection')
-    market_group.add_argument(
-        "--market",
-        type=str,
-        choices=list(MARKETS.keys()),
-        help="Predefined market pair to use. This will set token0 and token1.",
-        required=False,
-    )
-    market_group.add_argument(
-        "--token0",
-        type=str,
-        help="Address of token0. Required if --market is not specified.",
-        required=False,
-    )
-    market_group.add_argument(
-        "--token1",
-        type=str,
-        help="Address of token1. Required if --market is not specified.",
-        required=False,
-    )
+    market_group.add_argument("--market", type=str, choices=list(MARKETS.keys()), help="Predefined market pair to use")
+    market_group.add_argument("--token0", type=str, help="Address of token0 (if no market selected)")
+    market_group.add_argument("--token1", type=str, help="Address of token1 (if no market selected)")
 
-    parser.add_argument(
-        "--lowerPrice",
-        type=str,
-        default=DEFAULT_LOWER_PRICE,
-        help="Lower price of the range.",
-    )
-    parser.add_argument(
-        "--upperPrice",
-        type=str,
-        default=DEFAULT_UPPER_PRICE,
-        help="Upper price of the range.",
-    )
+    # Price range arguments
+    parser.add_argument("--lowerPrice", type=str, default=DEFAULT_LOWER_PRICE, help="Lower price of the range")
+    parser.add_argument("--upperPrice", type=str, default=DEFAULT_UPPER_PRICE, help="Upper price of the range")
 
-    size_group = parser.add_argument_group('Optional Size Specification (mutually exclusive)')
-    size_group.add_argument(
-        "--baseSize",
-        type=str,
-        help="Optional: Amount of base tokens (token0) to specify for the ratio query.",
-        required=False,
-    )
-    size_group.add_argument(
-        "--quoteSize",
-        type=str,
-        help="Optional: Amount of quote tokens (token1) to specify for the ratio query.",
-        required=False,
-    )
+    # Token amount arguments
+    size_group = parser.add_argument_group('Size Specification (mutually exclusive)')
+    size_group.add_argument("--baseSize", type=str, help="Amount of base tokens (token0)")
+    size_group.add_argument("--quoteSize", type=str, help="Amount of quote tokens (token1)")
 
     args = parser.parse_args()
 
+    # Determine token addresses based on market or direct input
     token0_address = args.token0
     token1_address = args.token1
-    lower_price = args.lowerPrice
-    upper_price = args.upperPrice
-
-    token0_decimals_for_market = 18 
-    token1_decimals_for_market = 18 
-
+    token0_name = "token0"
+    token1_name = "token1"
+    
     if args.market:
         if args.market not in MARKETS:
             print(f"Error: Market '{args.market}' not defined in MARKETS dictionary.")
@@ -270,53 +205,39 @@ def main():
         market_config = MARKETS[args.market]
         token0_address = market_config["token0_address"]
         token1_address = market_config["token1_address"]
-        token0_decimals_for_market = market_config["token0_decimals"]
-        
+        token0_name, token1_name = args.market.split('/')
         print(f"Using market: {args.market} (Token0: {token0_address}, Token1: {token1_address})\n")
 
+    # Validate required parameters
     if not token0_address or not token1_address:
         parser.error("Either --market or both --token0 and --token1 must be specified.")
-
     if args.baseSize and args.quoteSize:
         parser.error("Only one of --baseSize or --quoteSize can be specified, not both.")
 
+    # Fetch liquidity ratio
     ratio_data = fetch_liquidity_ratio(
-        token0_address,
-        token1_address,
-        lower_price,
-        upper_price,
-        base_size=args.baseSize,
-        quote_size=args.quoteSize
+        token0_address, token1_address,
+        args.lowerPrice, args.upperPrice,
+        base_size=args.baseSize, quote_size=args.quoteSize
     )
 
-    if ratio_data is None:
+    if not ratio_data:
         print("Failed to fetch liquidity ratio.", file=sys.stderr)
         return
 
-    # The API returns (quoteSize, baseSize) relative to token params in URL
-    # Since we reversed the token order in the URL, we need to interpret these correctly
+    # Process and display results
     token0_amount, token1_amount = ratio_data
 
     print("\nInterpreted API Normalized Ratio:")
     print(f"The API indicates that {token0_amount} units of token0 ({token0_address}) are equivalent to {token1_amount} units of token1 ({token1_address}).")
 
-    token0_name_for_print = args.market.split('/')[0] if args.market else "token0"
-    token1_name_for_print = args.market.split('/')[1] if args.market else "token1"
-
     if token0_amount != Decimal("0") and token1_amount != Decimal("0"):
-        # For sUSDe (token0) and wstETH (token1) in our example
-        # If API returns token0 = 0.00038... and token1 = 1.0, then:
-        # 1 wstETH = ~2,582 sUSDe (derived from 1.0/0.00038...)
-        # 1 sUSDe = ~0.00038... wstETH (derived directly from API response)
-        token1_per_token0 = token1_amount / token0_amount  # How many token1 per 1 token0
-        token0_per_token1 = token0_amount / token1_amount  # How many token0 per 1 token1
+        # Calculate price ratios
+        token0_per_token1 = token0_amount / token1_amount
         
         print("\nDerived Prices from API ratio:")
-        # In the sUSDe/wstETH example:
-        # 1 wstETH (token1) = 2582.65 sUSDe (token0)
-        print(f"  1 {token1_name_for_print} = {1/token0_per_token1:.8f} {token0_name_for_print}")
-        # 1 sUSDe (token0) = 0.00038... wstETH (token1)
-        print(f"  1 {token0_name_for_print} = {token0_per_token1:.8f} {token1_name_for_print}")
+        print(f"  1 {token1_name} = {1/token0_per_token1:.8f} {token0_name}")
+        print(f"  1 {token0_name} = {token0_per_token1:.8f} {token1_name}")
     else:
         print("\nCould not derive prices: one of the token amounts from API was zero.", file=sys.stderr)
 
