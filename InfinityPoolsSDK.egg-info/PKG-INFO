@@ -3,6 +3,9 @@ Name: InfinityPoolsSDK
 Version: 0.0.1
 Author-email: Mihai Cosma <mcosma@gmail.com>
 Requires-Python: >=3.12
+Requires-Dist: multicall>=0.10.0
+Requires-Dist: pytest>=8.3.5
 Requires-Dist: web3>=7.11.1
 Provides-Extra: test
-Requires-Dist: pytest>=8.0.0; extra == "test"
+Requires-Dist: pytest>=8.3.5; extra == "test"
+Requires-Dist: pytest-mock>=3.14.0; extra == "test"

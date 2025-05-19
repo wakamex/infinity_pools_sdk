@@ -6,15 +6,15 @@ and state on mainnet forks.
 """
 
 import os
-import pytest
 import time
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+import logging
 
-from web3 import Web3
+import pytest
 
+from infinity_pools_sdk.constants import ContractAddresses
 from infinity_pools_sdk.core.connector import InfinityPoolsConnector
 from infinity_pools_sdk.sdk import InfinityPoolsSDK
-from infinity_pools_sdk.tests.tenderly_fork import TenderlyFork
 
 
 class BaseTenderlyFunctionalTest:
@@ -26,82 +26,38 @@ class BaseTenderlyFunctionalTest:
     # This address has 10.605 sUSDe / 0.148 wstETH available
     IMPERSONATED_ADDRESS = "0x9eAFc0c2b04D96a1C1edAdda8A474a4506752207"
     
-    @pytest.fixture(scope="function")
-    def tenderly_fork(self, request):
-        """Fixture for a Tenderly fork.
-        
-        Args:
-            request: The pytest request object.
-            
-        Returns:
-            TenderlyFork: A Tenderly fork manager.
-        """
-        # Skip if integration tests are not enabled
-        if not request.config.getoption("--run-integration"):
-            pytest.skip("Integration tests not enabled. Use --run-integration to run.")
-            
-        # Create a Tenderly fork
-        fork = TenderlyFork()
-        yield fork
-        # Clean up the fork after the test
-        fork.delete_fork()
+    def setUp(self):
+        super().setUp()
+        # Log fork details for debugging
+        self.logger = logging.getLogger(__name__)
+        self.logger.info(f"Using Tenderly fork ID: {self.tenderly_fork.fork_id}")
+        self.logger.info(f"Fork RPC URL: {self.tenderly_connector.rpc_url}")
+        # Check if key contracts are deployed
+        periphery_address = os.environ.get("PERIPHERY_ADDRESS", "Not set")
+        self.logger.info(f"Periphery contract address: {periphery_address}")
+        if periphery_address != "Not set":
+            try:
+                code = self.tenderly_connector.w3.eth.get_code(periphery_address)
+                self.logger.info(f"Periphery contract code length: {len(code)} bytes")
+            except Exception as e:
+                self.logger.error(f"Error checking periphery contract: {e}")
+        else:
+            self.logger.warning("PERIPHERY_ADDRESS not set in environment")
     
     @pytest.fixture(scope="function")
-    def impersonated_connector(self, tenderly_fork, request):
-        """Fixture for an InfinityPoolsConnector that impersonates a specific address.
-        
-        This connector will impersonate the address specified in IMPERSONATED_ADDRESS,
-        which is a real user account on mainnet. Tenderly allows us to impersonate this
-        account without needing its private key.
-        
-        Args:
-            tenderly_fork: The Tenderly fork fixture.
-            request: The pytest request object.
-            
-        Returns:
-            InfinityPoolsConnector: A connector that impersonates the specified address.
-        """
-        # Create the fork directly in this fixture
-        network_id = os.environ.get("TENDERLY_NETWORK_ID", "1")  # Default to Ethereum mainnet
-        block_number = os.environ.get("TENDERLY_BLOCK_NUMBER")  # Use latest block if not specified
-        if block_number:
-            block_number = int(block_number)
-        
-        fork_id, web3, test_accounts = tenderly_fork.create_fork(
-            network_id=network_id,
-            block_number=block_number,
-            fork_name="Functional Test Fork"
-        )
-        
-        # Store the fork ID for later use
-        tenderly_fork.fork_id = fork_id
-        tenderly_fork.web3 = web3
-        
-        # Set a high block gas limit to avoid gas estimation issues
-        # 30,000,000 is a common value for local development chains
-        tenderly_fork.set_block_gas_limit(30000000)
-        
-        # Create a connector using the fork's RPC URL with impersonation headers
-        fork_rpc_url = f"https://rpc.tenderly.co/fork/{fork_id}"
-        
-        # Create headers for impersonation
-        headers = {"X-Tenderly-Force-Root-Account": self.IMPERSONATED_ADDRESS}
-        
-        # Return a connector with impersonation
-        return InfinityPoolsConnector(
-            rpc_url=fork_rpc_url,
-            network="mainnet",  # Use the network that was forked
-            headers=headers
-        )
-    
-    @pytest.fixture(scope="function")
-    def sdk(self):
+    def sdk(self, impersonated_connector: InfinityPoolsConnector):
         """Fixture for the InfinityPoolsSDK.
-        
+
+        Args:
+            impersonated_connector: The connector fixture providing an impersonated connection.
+            
         Returns:
             InfinityPoolsSDK: An instance of the SDK.
         """
-        return InfinityPoolsSDK()
+        return InfinityPoolsSDK(
+            connector=impersonated_connector,
+            periphery_address=ContractAddresses.BASE["proxy"]
+        )
     
     def get_position_token_ids(self, connector: InfinityPoolsConnector, address: Optional[str] = None) -> list:
         """Get the token IDs of all LP positions owned by the specified address.

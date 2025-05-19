@@ -45,7 +45,7 @@ lint.unfixable = []
 # Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-line-length = 200
+line-length = 120
 
 # Assume Python 3.12
 target-version = "py312"

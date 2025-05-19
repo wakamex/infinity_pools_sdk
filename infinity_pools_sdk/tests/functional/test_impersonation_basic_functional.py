@@ -10,7 +10,6 @@ from decimal import Decimal
 
 from infinity_pools_sdk.core.connector import InfinityPoolsConnector
 from infinity_pools_sdk.sdk import InfinityPoolsSDK
-from infinity_pools_sdk.tests.tenderly_fork import TenderlyFork
 from infinity_pools_sdk.tests.functional.base_tenderly_functional import BaseTenderlyFunctionalTest
 
 

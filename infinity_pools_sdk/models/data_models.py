@@ -1,40 +1,44 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
 class AddLiquidityParams:
-    """Represents the AddLiquidityParams struct in the Infinity Pools contract."""
+    """Represents the IInfinityPoolsPeriphery.AddLiquidityParams struct expected by the addLiquidity function.
+
+    The struct fields in Solidity are: token0, token1, useVaultDeposit, startEdge, stopEdge, 
+    amount0Desired, amount1Desired, amount0Min, amount1Min.
+    """
 
     token0: str  # Address of token0
     token1: str  # Address of token1
-    fee: int  # Fee tier (e.g., 500, 3000, 10000)
-    tickLower: int  # Lower tick boundary
-    tickUpper: int  # Upper tick boundary
+    useVaultDeposit: bool # Whether to use funds from the vault
+    startEdge: int      # The lower tick boundary of the position (corresponds to tickLower in some contexts).
+    stopEdge: int       # The upper tick boundary of the position (corresponds to tickUpper in some contexts).
     amount0Desired: Decimal  # Desired amount of token0
     amount1Desired: Decimal  # Desired amount of token1
     amount0Min: Decimal  # Minimum amount of token0
     amount1Min: Decimal  # Minimum amount of token1
-    recipient: str  # Address to receive the position NFT
-    deadline: int  # Transaction deadline timestamp
-    earnEra: int = 0  # Era from which liquidity starts earning fees
-    
+    # Note: fee, recipient, deadline, earnEra are not part of this specific ABI struct as per InfinityPoolsPeriphery.json for addLiquidity.
+
     def to_contract_tuple(self, token0_decimals: int = 18, token1_decimals: int = 18) -> tuple:
-        """Convert to tuple format expected by the contract."""
+        """Convert to the 9-element tuple format expected by the addLiquidity contract function.
+        
+        Order: token0, token1, useVaultDeposit, startEdge, stopEdge, 
+               amount0Desired, amount1Desired, amount0Min, amount1Min.
+        """
         return (
             self.token0,
             self.token1,
-            self.fee,
-            self.tickLower,
-            self.tickUpper,
+            self.useVaultDeposit,
+            self.startEdge,
+            self.stopEdge,
             int(self.amount0Desired * (10 ** token0_decimals)), # convert Decimal to int wei
             int(self.amount1Desired * (10 ** token1_decimals)), # convert Decimal to int wei
             int(self.amount0Min * (10 ** token0_decimals)),       # convert Decimal to int wei
             int(self.amount1Min * (10 ** token1_decimals)),       # convert Decimal to int wei
-            self.recipient,
-            self.deadline,
-            self.earnEra
         )
 
 
@@ -92,6 +96,46 @@ class MulticallParams:
             self.actions,
             self.data
         )
+
+
+class PositionType(Enum):
+    """Type of position."""
+
+    LP = 0
+    SWAPPER = 1
+
+@dataclass
+class PositionInfo:
+    """Represents the details of a liquidity position or swapper position."""
+
+    token_id: int
+    owner: str
+    pool_address: str 
+    position_type: PositionType
+    token0: str  # Symbol or address of token0
+    token1: str  # Symbol or address of token1
+    
+    # LP specific fields
+    lp_number: Optional[int] = None # The unique identifier for an LP position within its type and pool
+    start_edge: Optional[int] = None
+    stop_edge: Optional[int] = None
+    min_price: Optional[Decimal] = field(default_factory=Decimal)
+    max_price: Optional[Decimal] = field(default_factory=Decimal)
+    
+    # Swapper specific fields
+    swapper_number: Optional[int] = None # The unique identifier for a Swapper position within its type and pool
+    # Add other swapper-specific fields if any, e.g., swap parameters if they are static
+
+    # Financials - common or could be specialized
+    amount0_total: Decimal = field(default_factory=Decimal)  # Total amount of token0 ever deposited or current if tracking that way
+    amount1_total: Decimal = field(default_factory=Decimal)  # Total amount of token1 ever deposited
+    fees0_earned: Decimal = field(default_factory=Decimal)
+    fees1_earned: Decimal = field(default_factory=Decimal)
+    amount0_collected: Decimal = field(default_factory=Decimal)
+    amount1_collected: Decimal = field(default_factory=Decimal)
+    liquidity: int = 0 # Current liquidity units if applicable
+
+    # Could add more fields like transaction hashes of creation/modification, timestamps, etc.
 
 # Add more data models for other contract structs as needed
 

@@ -1,107 +1,1377 @@
 [
-    {
-        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-        "name": "positions",
-        "outputs": [
-            {"internalType": "uint96", "name": "nonce", "type": "uint96"},
-            {"internalType": "address", "name": "operator", "type": "address"},
-            {"internalType": "address", "name": "token0", "type": "address"},
-            {"internalType": "address", "name": "token1", "type": "address"},
-            {"internalType": "uint24", "name": "fee", "type": "uint24"},
-            {"internalType": "int24", "name": "tickLower", "type": "int24"},
-            {"internalType": "int24", "name": "tickUpper", "type": "int24"},
-            {"internalType": "uint128", "name": "liquidity", "type": "uint128"},
-            {"internalType": "uint256", "name": "feeGrowthInside0LastX128", "type": "uint256"},
-            {"internalType": "uint256", "name": "feeGrowthInside1LastX128", "type": "uint256"},
-            {"internalType": "uint128", "name": "tokensOwed0", "type": "uint128"},
-            {"internalType": "uint128", "name": "tokensOwed1", "type": "uint128"}
+  {
+    "inputs": [
+      { "internalType": "address", "name": "target", "type": "address" }
+    ],
+    "name": "AddressEmptyCode",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "AddressInsufficientBalance",
+    "type": "error"
+  },
+  { "inputs": [], "name": "CallerNotApproved", "type": "error" },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "implementation", "type": "address" }
+    ],
+    "name": "ERC1967InvalidImplementation",
+    "type": "error"
+  },
+  { "inputs": [], "name": "ERC1967NonPayable", "type": "error" },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "sender", "type": "address" },
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+      { "internalType": "address", "name": "owner", "type": "address" }
+    ],
+    "name": "ERC721IncorrectOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "operator", "type": "address" },
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+    ],
+    "name": "ERC721InsufficientApproval",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "approver", "type": "address" }
+    ],
+    "name": "ERC721InvalidApprover",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "operator", "type": "address" }
+    ],
+    "name": "ERC721InvalidOperator",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "owner", "type": "address" }
+    ],
+    "name": "ERC721InvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "receiver", "type": "address" }
+    ],
+    "name": "ERC721InvalidReceiver",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "sender", "type": "address" }
+    ],
+    "name": "ERC721InvalidSender",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+    ],
+    "name": "ERC721NonexistentToken",
+    "type": "error"
+  },
+  { "inputs": [], "name": "ETHTransferFailed", "type": "error" },
+  { "inputs": [], "name": "FailedInnerCall", "type": "error" },
+  { "inputs": [], "name": "IdenticalTokens", "type": "error" },
+  { "inputs": [], "name": "InvalidFundsSpent", "type": "error" },
+  { "inputs": [], "name": "InvalidID", "type": "error" },
+  { "inputs": [], "name": "InvalidInitialization", "type": "error" },
+  { "inputs": [], "name": "InvalidPaymentType", "type": "error" },
+  { "inputs": [], "name": "InvalidPoolAddress", "type": "error" },
+  { "inputs": [], "name": "InvalidTokenOrder", "type": "error" },
+  { "inputs": [], "name": "NoLiquidity", "type": "error" },
+  { "inputs": [], "name": "NoTokensProvided", "type": "error" },
+  { "inputs": [], "name": "NoTokensRequired", "type": "error" },
+  { "inputs": [], "name": "NotAllowedToUseVaultDeposit", "type": "error" },
+  {
+    "inputs": [
+      { "internalType": "int256", "name": "net0", "type": "int256" },
+      { "internalType": "int256", "name": "net1", "type": "int256" }
+    ],
+    "name": "NotEnoughCollateral",
+    "type": "error"
+  },
+  { "inputs": [], "name": "NotInitializing", "type": "error" },
+  { "inputs": [], "name": "OnlyWETHAllowed", "type": "error" },
+  { "inputs": [], "name": "OwnerIsNotTheSame", "type": "error" },
+  { "inputs": [], "name": "PoolAddressIsNotTheSame", "type": "error" },
+  { "inputs": [], "name": "PoolDoesNotExist", "type": "error" },
+  { "inputs": [], "name": "PositionTypeIsNotSwapper", "type": "error" },
+  { "inputs": [], "name": "PriceSlippageAmount0", "type": "error" },
+  { "inputs": [], "name": "PriceSlippageAmount1", "type": "error" },
+  { "inputs": [], "name": "ReentrancyGuardReentrantCall", "type": "error" },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "token", "type": "address" }
+    ],
+    "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  { "inputs": [], "name": "UUPSUnauthorizedCallContext", "type": "error" },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "slot", "type": "bytes32" }
+    ],
+    "name": "UUPSUnsupportedProxiableUUID",
+    "type": "error"
+  },
+  { "inputs": [], "name": "Unauthorized", "type": "error" },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "approved",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "Approval",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      }
+    ],
+    "name": "ApprovalForAll",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "Deposit",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "poolAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "token",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "decimals",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "source",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "DepositCollateral",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "version",
+        "type": "uint64"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "ids",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "NoOpSwapperIds",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "pool",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "lpNum",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "amount0",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "amount1",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "earnEra",
+        "type": "int256"
+      }
+    ],
+    "name": "PeripheryLiquidityAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "Transfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "implementation",
+        "type": "address"
+      }
+    ],
+    "name": "Upgraded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "Withdraw",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "poolAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "token",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "decimals",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "destination",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "WithdrawCollateral",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "UPGRADE_INTERFACE_VERSION",
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "WETH9",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "tokenA", "type": "address" },
+      { "internalType": "address", "name": "tokenB", "type": "address" },
+      { "internalType": "contract IERC20", "name": "token", "type": "address" },
+      { "internalType": "address", "name": "user", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "addCollateral",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          { "internalType": "address", "name": "token0", "type": "address" },
+          { "internalType": "address", "name": "token1", "type": "address" },
+          { "internalType": "bool", "name": "useVaultDeposit", "type": "bool" },
+          { "internalType": "int256", "name": "startEdge", "type": "int256" },
+          { "internalType": "int256", "name": "stopEdge", "type": "int256" },
+          {
+            "internalType": "uint256",
+            "name": "amount0Desired",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount1Desired",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount0Min",
+            "type": "uint256"
+          },
+          { "internalType": "uint256", "name": "amount1Min", "type": "uint256" }
         ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [{"internalType": "address", "name": "owner", "type": "address"}],
-        "name": "balanceOf",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "owner", "type": "address"},
-            {"internalType": "uint256", "name": "index", "type": "uint256"}
+        "internalType": "struct IInfinityPoolsPeriphery.AddLiquidityParams",
+        "name": "params",
+        "type": "tuple"
+      }
+    ],
+    "name": "addLiquidity",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "swapForwarder", "type": "address" },
+      { "internalType": "bool", "name": "addOrRemove", "type": "bool" }
+    ],
+    "name": "addOrRemoveSwapForwarder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "user", "type": "address" },
+      { "internalType": "address", "name": "token", "type": "address" },
+      { "internalType": "address", "name": "spender", "type": "address" }
+    ],
+    "name": "allowance",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+    ],
+    "name": "approve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "contract IERC20", "name": "token", "type": "address" },
+      { "internalType": "address", "name": "spender", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "approveERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "owner", "type": "address" }
+    ],
+    "name": "balanceOf",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256[]",
+            "name": "unwindTokenIds",
+            "type": "uint256[]"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+              },
+              { "internalType": "Quad", "name": "tokenMix", "type": "bytes16" },
+              { "internalType": "bool", "name": "fixedToken", "type": "bool" },
+              {
+                "internalType": "int256",
+                "name": "twapUntil",
+                "type": "int256"
+              }
+            ],
+            "internalType": "struct IInfinityPoolsPeriphery.ReflowParams[]",
+            "name": "reflowParams",
+            "type": "tuple[]"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+              },
+              { "internalType": "int256", "name": "deadEra", "type": "int256" },
+              { "internalType": "Quad", "name": "tokenMix", "type": "bytes16" },
+              { "internalType": "bool", "name": "fixedToken", "type": "bool" },
+              {
+                "internalType": "int256",
+                "name": "twapUntil",
+                "type": "int256"
+              }
+            ],
+            "internalType": "struct IInfinityPoolsPeriphery.ResetParams[]",
+            "name": "resetParams",
+            "type": "tuple[]"
+          },
+          {
+            "components": [
+              {
+                "internalType": "Quad[]",
+                "name": "owedPotential",
+                "type": "bytes16[]"
+              },
+              {
+                "internalType": "int256",
+                "name": "startBin",
+                "type": "int256"
+              },
+              {
+                "internalType": "int256",
+                "name": "strikeBin",
+                "type": "int256"
+              },
+              { "internalType": "Quad", "name": "tokenMix", "type": "bytes16" },
+              {
+                "internalType": "Quad",
+                "name": "lockinEnd",
+                "type": "bytes16"
+              },
+              {
+                "internalType": "OptInt256",
+                "name": "deadEra",
+                "type": "int256"
+              },
+              { "internalType": "bool", "name": "token", "type": "bool" },
+              {
+                "internalType": "OptInt256",
+                "name": "twapUntil",
+                "type": "int256"
+              }
+            ],
+            "internalType": "struct NewLoan.NewLoanParams[]",
+            "name": "newLoanParams",
+            "type": "tuple[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "noOpIds",
+            "type": "uint256[]"
+          },
+          {
+            "components": [
+              { "internalType": "Quad", "name": "shove", "type": "bytes16" },
+              { "internalType": "bool", "name": "ofToken", "type": "bool" },
+              {
+                "internalType": "OptQuad",
+                "name": "limitPrice",
+                "type": "bytes16"
+              },
+              {
+                "internalType": "OptQuad",
+                "name": "remainingAmount",
+                "type": "bytes16"
+              }
+            ],
+            "internalType": "struct Spot.SpotSwapParams",
+            "name": "infinityPoolSpotSwapParams",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "swapForwarder",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "tokenInSpender",
+                "type": "address"
+              },
+              { "internalType": "address", "name": "to", "type": "address" },
+              { "internalType": "bytes", "name": "data", "type": "bytes" }
+            ],
+            "internalType": "struct IInfinityPoolsPeriphery.SwapInfo",
+            "name": "swap",
+            "type": "tuple"
+          }
         ],
-        "name": "tokenOfOwnerByIndex",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "token0", "type": "address"},
-            {"internalType": "address", "name": "token1", "type": "address"},
-            {"internalType": "uint24", "name": "fee", "type": "uint24"},
-            {"internalType": "int24", "name": "tickLower", "type": "int24"},
-            {"internalType": "int24", "name": "tickUpper", "type": "int24"},
-            {"internalType": "uint256", "name": "amount0Desired", "type": "uint256"},
-            {"internalType": "uint256", "name": "amount1Desired", "type": "uint256"},
-            {"internalType": "uint256", "name": "amount0Min", "type": "uint256"},
-            {"internalType": "uint256", "name": "amount1Min", "type": "uint256"},
-            {"internalType": "address", "name": "recipient", "type": "address"},
-            {"internalType": "uint256", "name": "deadline", "type": "uint256"}
+        "internalType": "struct IInfinityPoolsPeriphery.BatchActionsParams",
+        "name": "params",
+        "type": "tuple"
+      }
+    ],
+    "name": "batchActionsOnSwappers",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "unwindTokenIds",
+        "type": "uint256[]"
+      },
+      {
+        "components": [
+          { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+          { "internalType": "Quad", "name": "tokenMix", "type": "bytes16" },
+          { "internalType": "bool", "name": "fixedToken", "type": "bool" },
+          { "internalType": "int256", "name": "twapUntil", "type": "int256" }
         ],
-        "name": "mint",
-        "outputs": [
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-            {"internalType": "uint128", "name": "liquidity", "type": "uint128"},
-            {"internalType": "uint256", "name": "amount0", "type": "uint256"},
-            {"internalType": "uint256", "name": "amount1", "type": "uint256"}
+        "internalType": "struct IInfinityPoolsPeriphery.ReflowParams[]",
+        "name": "reflowParams",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "Quad[]",
+            "name": "owedPotential",
+            "type": "bytes16[]"
+          },
+          { "internalType": "int256", "name": "startBin", "type": "int256" },
+          { "internalType": "int256", "name": "strikeBin", "type": "int256" },
+          { "internalType": "Quad", "name": "tokenMix", "type": "bytes16" },
+          { "internalType": "Quad", "name": "lockinEnd", "type": "bytes16" },
+          { "internalType": "OptInt256", "name": "deadEra", "type": "int256" },
+          { "internalType": "bool", "name": "token", "type": "bool" },
+          { "internalType": "OptInt256", "name": "twapUntil", "type": "int256" }
         ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-            {"internalType": "uint128", "name": "liquidity", "type": "uint128"},
-            {"internalType": "uint256", "name": "amount0Min", "type": "uint256"},
-            {"internalType": "uint256", "name": "amount1Min", "type": "uint256"},
-            {"internalType": "uint256", "name": "deadline", "type": "uint256"}
+        "internalType": "struct NewLoan.NewLoanParams[]",
+        "name": "newLoanParams",
+        "type": "tuple[]"
+      },
+      { "internalType": "uint256[]", "name": "noOpIds", "type": "uint256[]" },
+      {
+        "components": [
+          { "internalType": "Quad", "name": "shove", "type": "bytes16" },
+          { "internalType": "bool", "name": "ofToken", "type": "bool" },
+          {
+            "internalType": "OptQuad",
+            "name": "limitPrice",
+            "type": "bytes16"
+          },
+          {
+            "internalType": "OptQuad",
+            "name": "remainingAmount",
+            "type": "bytes16"
+          }
         ],
-        "name": "decreaseLiquidity",
-        "outputs": [
-            {"internalType": "uint256", "name": "amount0", "type": "uint256"},
-            {"internalType": "uint256", "name": "amount1", "type": "uint256"}
+        "internalType": "struct Spot.SpotSwapParams",
+        "name": "infinityPoolSpotSwapParams",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "swapForwarder",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenInSpender",
+            "type": "address"
+          },
+          { "internalType": "address", "name": "to", "type": "address" },
+          { "internalType": "bytes", "name": "data", "type": "bytes" }
         ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-            {"internalType": "address", "name": "receiver", "type": "address"}
+        "internalType": "struct IInfinityPoolsPeriphery.SwapInfo",
+        "name": "swap",
+        "type": "tuple"
+      }
+    ],
+    "name": "batchActionsOnSwappers",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "user", "type": "address" },
+      { "internalType": "address", "name": "token0", "type": "address" },
+      { "internalType": "address", "name": "token1", "type": "address" },
+      { "internalType": "bool", "name": "token", "type": "bool" }
+    ],
+    "name": "collaterals",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+      { "internalType": "address", "name": "receiver", "type": "address" }
+    ],
+    "name": "collect",
+    "outputs": [
+      { "internalType": "int256", "name": "amount0", "type": "int256" },
+      { "internalType": "int256", "name": "amount1", "type": "int256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "contract IERC20", "name": "token", "type": "address" },
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "internalType": "bool", "name": "isPermit2", "type": "bool" },
+      { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+      { "internalType": "uint256", "name": "deadline", "type": "uint256" },
+      { "internalType": "bytes", "name": "signature", "type": "bytes" }
+    ],
+    "name": "depositERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "user", "type": "address" },
+      { "internalType": "address", "name": "token", "type": "address" }
+    ],
+    "name": "deposits",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+      { "internalType": "address", "name": "receiver", "type": "address" }
+    ],
+    "name": "drain",
+    "outputs": [
+      { "internalType": "int256", "name": "amount0", "type": "int256" },
+      { "internalType": "int256", "name": "amount1", "type": "int256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum EncodeIdHelper.PositionType",
+        "name": "enumValue",
+        "type": "uint8"
+      },
+      { "internalType": "address", "name": "poolAddress", "type": "address" },
+      {
+        "internalType": "uint88",
+        "name": "lpOrSwapperNumber",
+        "type": "uint88"
+      }
+    ],
+    "name": "encodeId",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "factory",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "generalSwapForwarder",
+    "outputs": [
+      {
+        "internalType": "contract GeneralSwapForwarder",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+    ],
+    "name": "getApproved",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getFactoryAddress",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "tokenA", "type": "address" },
+      { "internalType": "address", "name": "tokenB", "type": "address" }
+    ],
+    "name": "getPoolAddress",
+    "outputs": [
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "tokenA", "type": "address" },
+      { "internalType": "address", "name": "tokenB", "type": "address" },
+      { "internalType": "int256", "name": "", "type": "int256" }
+    ],
+    "name": "getPoolAddress",
+    "outputs": [
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "contract IERC20", "name": "token", "type": "address" },
+      { "internalType": "address", "name": "spender", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "increaseAllowanceERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "int256", "name": "amount0", "type": "int256" },
+      { "internalType": "int256", "name": "amount1", "type": "int256" },
+      { "internalType": "bytes", "name": "_data", "type": "bytes" }
+    ],
+    "name": "infinityPoolPaymentCallback",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "_factory", "type": "address" },
+      { "internalType": "address", "name": "_WETH9", "type": "address" },
+      {
+        "internalType": "contract IPermit2",
+        "name": "permit2",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "owner", "type": "address" },
+      { "internalType": "address", "name": "operator", "type": "address" }
+    ],
+    "name": "isApprovedForAll",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes[]", "name": "data", "type": "bytes[]" }
+    ],
+    "name": "multicall",
+    "outputs": [
+      { "internalType": "bytes[]", "name": "results", "type": "bytes[]" }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "name",
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "token0", "type": "address" },
+      { "internalType": "address", "name": "token1", "type": "address" },
+      { "internalType": "int256", "name": "splits", "type": "int256" },
+      { "internalType": "address", "name": "onBehalfOf", "type": "address" },
+      {
+        "components": [
+          {
+            "internalType": "Quad[]",
+            "name": "owedPotential",
+            "type": "bytes16[]"
+          },
+          { "internalType": "int256", "name": "startBin", "type": "int256" },
+          { "internalType": "int256", "name": "strikeBin", "type": "int256" },
+          { "internalType": "Quad", "name": "tokenMix", "type": "bytes16" },
+          { "internalType": "Quad", "name": "lockinEnd", "type": "bytes16" },
+          { "internalType": "OptInt256", "name": "deadEra", "type": "int256" },
+          { "internalType": "bool", "name": "token", "type": "bool" },
+          { "internalType": "OptInt256", "name": "twapUntil", "type": "int256" }
         ],
-        "name": "drain",
-        "outputs": [
-            {"internalType": "uint256", "name": "amount0", "type": "uint256"},
-            {"internalType": "uint256", "name": "amount1", "type": "uint256"}
+        "internalType": "struct NewLoan.NewLoanParams",
+        "name": "newLoanParams",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          { "internalType": "Quad", "name": "shove", "type": "bytes16" },
+          { "internalType": "bool", "name": "ofToken", "type": "bool" },
+          {
+            "internalType": "OptQuad",
+            "name": "limitPrice",
+            "type": "bytes16"
+          },
+          {
+            "internalType": "OptQuad",
+            "name": "remainingAmount",
+            "type": "bytes16"
+          }
         ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-            {"internalType": "address", "name": "recipient", "type": "address"},
-            {"internalType": "uint128", "name": "amount0Max", "type": "uint128"},
-            {"internalType": "uint128", "name": "amount1Max", "type": "uint128"}
+        "internalType": "struct Spot.SpotSwapParams",
+        "name": "infinityPoolSpotSwapParams",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "swapForwarder",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenInSpender",
+            "type": "address"
+          },
+          { "internalType": "address", "name": "to", "type": "address" },
+          { "internalType": "bytes", "name": "data", "type": "bytes" }
         ],
-        "name": "collect",
-        "outputs": [
-            {"internalType": "uint128", "name": "amount0", "type": "uint128"},
-            {"internalType": "uint128", "name": "amount1", "type": "uint128"}
+        "internalType": "struct IInfinityPoolsPeriphery.SwapInfo",
+        "name": "swap",
+        "type": "tuple"
+      }
+    ],
+    "name": "newLoan",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+    ],
+    "name": "ownerOf",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "permit2",
+    "outputs": [
+      { "internalType": "contract IPermit2", "name": "", "type": "address" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "proxiableUUID",
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+          { "internalType": "Quad", "name": "tokenMix", "type": "bytes16" },
+          { "internalType": "bool", "name": "fixedToken", "type": "bool" },
+          { "internalType": "int256", "name": "twapUntil", "type": "int256" }
         ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    }
+        "internalType": "struct IInfinityPoolsPeriphery.ReflowParams",
+        "name": "params",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "swapForwarder",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenInSpender",
+            "type": "address"
+          },
+          { "internalType": "address", "name": "to", "type": "address" },
+          { "internalType": "bytes", "name": "data", "type": "bytes" }
+        ],
+        "internalType": "struct IInfinityPoolsPeriphery.SwapInfo",
+        "name": "swap",
+        "type": "tuple"
+      }
+    ],
+    "name": "reflow",
+    "outputs": [
+      { "internalType": "int256", "name": "amount0", "type": "int256" },
+      { "internalType": "int256", "name": "amount1", "type": "int256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+          { "internalType": "int256", "name": "deadEra", "type": "int256" },
+          { "internalType": "Quad", "name": "tokenMix", "type": "bytes16" },
+          { "internalType": "bool", "name": "fixedToken", "type": "bool" },
+          { "internalType": "int256", "name": "twapUntil", "type": "int256" }
+        ],
+        "internalType": "struct IInfinityPoolsPeriphery.ResetParams",
+        "name": "params",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "swapForwarder",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenInSpender",
+            "type": "address"
+          },
+          { "internalType": "address", "name": "to", "type": "address" },
+          { "internalType": "bytes", "name": "data", "type": "bytes" }
+        ],
+        "internalType": "struct IInfinityPoolsPeriphery.SwapInfo",
+        "name": "swap",
+        "type": "tuple"
+      }
+    ],
+    "name": "reset",
+    "outputs": [
+      { "internalType": "int256", "name": "amount0", "type": "int256" },
+      { "internalType": "int256", "name": "amount1", "type": "int256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "from", "type": "address" },
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+    ],
+    "name": "safeTransferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "from", "type": "address" },
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+      { "internalType": "bytes", "name": "data", "type": "bytes" }
+    ],
+    "name": "safeTransferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "operator", "type": "address" },
+      { "internalType": "bool", "name": "approved", "type": "bool" }
+    ],
+    "name": "setApprovalForAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes4", "name": "interfaceId", "type": "bytes4" }
+    ],
+    "name": "supportsInterface",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "user", "type": "address" },
+      {
+        "internalType": "contract IERC20",
+        "name": "fromToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fromTokenAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "toToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minTokenAmountOut",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "swapForwarder",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenInSpender",
+            "type": "address"
+          },
+          { "internalType": "address", "name": "to", "type": "address" },
+          { "internalType": "bytes", "name": "data", "type": "bytes" }
+        ],
+        "internalType": "struct IInfinityPoolsPeriphery.SwapInfo",
+        "name": "swapInfo",
+        "type": "tuple"
+      }
+    ],
+    "name": "swapDeposit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "swapForwarderAddress",
+        "type": "address"
+      }
+    ],
+    "name": "swapForwarders",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "symbol",
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+    ],
+    "name": "tap",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+    ],
+    "name": "tokenURI",
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "from", "type": "address" },
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+    ],
+    "name": "transferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "swapForwarder",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenInSpender",
+            "type": "address"
+          },
+          { "internalType": "address", "name": "to", "type": "address" },
+          { "internalType": "bytes", "name": "data", "type": "bytes" }
+        ],
+        "internalType": "struct IInfinityPoolsPeriphery.SwapInfo",
+        "name": "swap",
+        "type": "tuple"
+      }
+    ],
+    "name": "unwind",
+    "outputs": [
+      { "internalType": "int256", "name": "amount0", "type": "int256" },
+      { "internalType": "int256", "name": "amount1", "type": "int256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newImplementation",
+        "type": "address"
+      },
+      { "internalType": "bytes", "name": "data", "type": "bytes" }
+    ],
+    "name": "upgradeToAndCall",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "onBehalfOf", "type": "address" },
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "withdrawAndUnwrapETH",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "token0", "type": "address" },
+      { "internalType": "address", "name": "token1", "type": "address" },
+      { "internalType": "address", "name": "user", "type": "address" },
+      { "internalType": "bool", "name": "token", "type": "bool" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "withdrawCollaterals",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "contract IERC20", "name": "token", "type": "address" },
+      { "internalType": "address", "name": "onBehalfOf", "type": "address" },
+      { "internalType": "address", "name": "to", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "withdrawERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "to", "type": "address" }],
+    "name": "wrapAndDepositWETH",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  { "stateMutability": "payable", "type": "receive" }
 ]

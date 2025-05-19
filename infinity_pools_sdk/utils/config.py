@@ -8,6 +8,7 @@ NETWORKS: Dict[str, int] = {
     'sepolia': 11155111,
     'arbitrum': 42161,
     'optimism': 10,
+    'base': 8453,
     # Add other supported networks
 }
 

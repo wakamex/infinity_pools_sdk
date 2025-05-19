@@ -14,7 +14,6 @@ from web3 import Web3
 
 from infinity_pools_sdk.core.connector import InfinityPoolsConnector
 from infinity_pools_sdk.sdk import InfinityPoolsSDK
-from infinity_pools_sdk.tests.tenderly_fork import TenderlyFork
 from infinity_pools_sdk.tests.functional.base_tenderly_functional import BaseTenderlyFunctionalTest
 from infinity_pools_sdk.abis import PERIPHERY_ABI, ERC20_ABI
 from infinity_pools_sdk.models.data_models import AddLiquidityParams
@@ -124,15 +123,14 @@ class TestAddLiquidityTenderlyFunctional(BaseTenderlyFunctionalTest):
         params = AddLiquidityParams(
             token0=token0,
             token1=token1,
-            fee=fee,
+            useVaultDeposit=False,  # New parameter, defaulting to False for the test
+            startEdge=tick_lower,   # Use startEdge to match AddLiquidityParams field (maps from tick_lower)
+            stopEdge=tick_upper,    # Use stopEdge to match AddLiquidityParams field (maps from tick_upper)
             amount0Desired=Decimal(token0_amount),
             amount1Desired=Decimal(token1_amount),
             amount0Min=Decimal(0),
-            amount1Min=Decimal(0),
-            recipient=self.IMPERSONATED_ADDRESS,
-            tickLower=tick_lower,
-            tickUpper=tick_upper,
-            deadline=int(time.time()) + 3600  # 1 hour from now
+            amount1Min=Decimal(0)
+            # fee, recipient, deadline, earnEra are no longer part of this AddLiquidityParams struct
         )
         
         # Get token IDs before adding liquidity
@@ -149,15 +147,15 @@ class TestAddLiquidityTenderlyFunctional(BaseTenderlyFunctionalTest):
             result = sdk.add_liquidity(
                 token0_address=params.token0,
                 token1_address=params.token1,
-                fee=params.fee,
-                tick_lower=params.tickLower,
-                tick_upper=params.tickUpper,
+                use_vault_deposit=params.useVaultDeposit,
+                tick_lower=params.startEdge, # Pass startEdge value to tick_lower param of SDK method
+                tick_upper=params.stopEdge,  # Pass stopEdge value to tick_upper param of SDK method
                 amount0_desired=params.amount0Desired,
                 amount1_desired=params.amount1Desired,
                 amount0_min=params.amount0Min,
                 amount1_min=params.amount1Min,
-                recipient=params.recipient,
-                deadline=int(time.time()) + 60 * 10,  # 10 minutes
+                # recipient and deadline are not direct parameters for sdk.add_liquidity
+                # recipient defaults to self._active_address (impersonated_connector in this test)
                 transaction_overrides=tx_overrides
             )
         except Exception as e:

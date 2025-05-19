@@ -1,4 +1,7 @@
+multicall>=0.10.0
+pytest>=8.3.5
 web3>=7.11.1
 
 [test]
-pytest>=8.0.0
+pytest>=8.3.5
+pytest-mock>=3.14.0
