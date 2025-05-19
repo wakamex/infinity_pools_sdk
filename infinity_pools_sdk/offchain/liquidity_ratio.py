@@ -183,7 +183,7 @@ def fetch_liquidity_ratio(
       /liquidityRatio/{token0_address}/{token1_address}/{lower_price_decimal_str}/{upper_price_decimal_str}
     - If ticks are not provided AND string prices are "0" and "Infinity" (default),
       the /infinity endpoint is used:
-      /liquidityRatio/{token0_address}/{token1_address}/infinity
+      /liquidityRatio/{token0_address}/{token1_address}/0/Infinity
     - Otherwise (custom string prices, no ticks), query parameters are used:
       /liquidityRatio/{token0_address}/{token1_address}?lowerPrice=X&upperPrice=Y
 
@@ -220,7 +220,7 @@ def fetch_liquidity_ratio(
         url = f"{api_base_url}/{token0_address}/{token1_address}/{actual_lower_price_str}/{actual_upper_price_str}"
     elif lower_price_str_input == DEFAULT_LOWER_PRICE and upper_price_str_input == DEFAULT_UPPER_PRICE:
         # Full range (0 to Infinity) uses the /infinity endpoint
-        url = f"{api_base_url}/{token0_address}/{token1_address}/infinity"
+        url = f"{api_base_url}/{token0_address}/{token1_address}/0/Infinity"
     else:
         # Custom string prices, use query parameters
         url = f"{api_base_url}/{token0_address}/{token1_address}"
