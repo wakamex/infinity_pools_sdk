@@ -35,10 +35,10 @@ class AddLiquidityParams:
             self.useVaultDeposit,
             self.startEdge,
             self.stopEdge,
-            int(self.amount0Desired * (10 ** token0_decimals)), # convert Decimal to int wei
-            int(self.amount1Desired * (10 ** token1_decimals)), # convert Decimal to int wei
-            int(self.amount0Min * (10 ** token0_decimals)),       # convert Decimal to int wei
-            int(self.amount1Min * (10 ** token1_decimals)),       # convert Decimal to int wei
+            int(self.amount0Desired),
+            int(self.amount1Desired),
+            int(self.amount0Min),
+            int(self.amount1Min),
         )
 
 

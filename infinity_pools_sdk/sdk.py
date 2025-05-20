@@ -171,10 +171,16 @@ class InfinityPoolsSDK:
             token1_helper.ensure_allowance(token_address=token1_address, spender_address=self.periphery_contract.address, required_amount_decimal=amount1_desired, owner_address=self._active_address)
 
         # Convert decimal amounts to wei
-        amount0_desired_wei = int(amount0_desired * (Decimal("10") ** _token0_decimals))
-        amount1_desired_wei = int(amount1_desired * (Decimal("10") ** _token1_decimals))
-        amount0_min_wei = int(amount0_min * (Decimal("10") ** _token0_decimals))
-        amount1_min_wei = int(amount1_min * (Decimal("10") ** _token1_decimals))
+        # amount0_desired_wei = int(amount0_desired * (Decimal("10") ** _token0_decimals))
+        # amount1_desired_wei = int(amount1_desired * (Decimal("10") ** _token1_decimals))
+        # amount0_min_wei = int(amount0_min * (Decimal("10") ** _token0_decimals))
+        # amount1_min_wei = int(amount1_min * (Decimal("10") ** _token1_decimals))
+
+        # Work with wei
+        amount0_desired_wei = amount0_desired
+        amount1_desired_wei = amount1_desired
+        amount0_min_wei = amount0_min
+        amount1_min_wei = amount1_min
 
         params = AddLiquidityParams(
             token0=token0_address,
@@ -189,6 +195,10 @@ class InfinityPoolsSDK:
         )
 
         contract_call_params = params.to_contract_tuple(_token0_decimals, _token1_decimals)
+
+        # for k,v in contract_call_params:
+        #     print(f"{k}: {v}")
+        # return {}
 
         periphery_contract = self.periphery_contract
         # Set up transaction parameters

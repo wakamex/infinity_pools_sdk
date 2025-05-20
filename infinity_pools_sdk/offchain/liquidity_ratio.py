@@ -92,7 +92,7 @@ import requests
 from requests.exceptions import HTTPError
 
 # Set precision for Decimal calculations
-getcontext().prec = 50
+getcontext().prec = 64
 
 # Token Addresses 
 SUSD_E_ADDRESS = "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452"
@@ -105,21 +105,15 @@ WETH_BASE_ADDRESS = "0x4200000000000000000000000000000000000006"
 MARKETS = {
     "sUSDe/wstETH": {
         "token0_address": SUSD_E_ADDRESS,
-        "token1_address": WST_ETH_ADDRESS,
-        "token0_decimals": 18,
-        "token1_decimals": 18
+        "token1_address": WST_ETH_ADDRESS
     },
     "USDC/wETH": {
         "token0_address": USDC_BASE_ADDRESS,
-        "token1_address": WETH_BASE_ADDRESS,
-        "token0_decimals": 1,
-        "token1_decimals": 18
+        "token1_address": WETH_BASE_ADDRESS
     },
     "crvUSD/wETH": {
         "token0_address": CRVUSD_BASE_ADDRESS,
-        "token1_address": WETH_BASE_ADDRESS,
-        "token0_decimals": 18,
-        "token1_decimals": 18
+        "token1_address": WETH_BASE_ADDRESS
     },
 }
 
@@ -140,7 +134,7 @@ def tick_to_price_string(tick: int, num_decimal_places: int, precision: int = TI
     """Convert a Uniswap V3-style tick to its corresponding price string.
 
     The price is rounded to a specific number of decimal places.
-    Price = 1.0001 ^ tick.
+    Price = 1.01 ^ tick.
 
     Args:
         tick: The tick value (integer).
@@ -152,7 +146,7 @@ def tick_to_price_string(tick: int, num_decimal_places: int, precision: int = TI
     """
     # Use a local context for precision to avoid changing global context
     ctx = Context(prec=precision)
-    base = ctx.create_decimal("1.0001")
+    base = ctx.create_decimal("1.01")
 
     price_calculated = ctx.power(base, ctx.create_decimal(tick))
 
@@ -244,7 +238,7 @@ def fetch_liquidity_ratio(
         response.raise_for_status()  # Raises HTTPError for bad responses (4XX or 5XX)
         data = response.json()
         # The API returns "baseSize" and "quoteSize".
-        return Decimal(data["quoteSize"]), Decimal(data["baseSize"])
+        return Decimal(data["baseSize"]), Decimal(data["quoteSize"])
     except HTTPError as http_err:
         print(f"HTTP error occurred: {http_err} - {response.status_code} {response.reason}\nURL: {log_url}\nResponse text: {response.text}", file=sys.stderr)
     except requests.ConnectionError as conn_err:
@@ -274,7 +268,12 @@ def main():
 
     # Price range arguments
     parser.add_argument("--lowerPrice", type=str, default=DEFAULT_LOWER_PRICE, help="Lower price of the range")
-    parser.add_argument("--upperPrice", type=str, default=DEFAULT_UPPER_PRICE, help="Upper price of the range")
+    parser.add_argument("--upperPrice", type=str, default=DEFAULT_UPPER_PRICE, help="Upper price of the range (used if ticks not provided)")
+
+    # Tick-based price range arguments (override string prices if provided)
+    tick_group = parser.add_argument_group('Tick-based Price Range (optional, overrides --lowerPrice/--upperPrice)')
+    tick_group.add_argument("--lower_tick", type=int, help="Lower tick of the range (e.g., -80302)")
+    tick_group.add_argument("--upper_tick", type=int, help="Upper tick of the range (e.g., -76326)")
 
     # Token amount arguments
     size_group = parser.add_argument_group('Size Specification (mutually exclusive)')
@@ -307,9 +306,14 @@ def main():
 
     # Fetch liquidity ratio
     ratio_data = fetch_liquidity_ratio(
-        token0_address, token1_address,
-        args.lowerPrice, args.upperPrice,
-        base_size=args.baseSize, quote_size=args.quoteSize
+        token0_address=token0_address, 
+        token1_address=token1_address,
+        lower_price_str_input=args.lowerPrice, 
+        upper_price_str_input=args.upperPrice,
+        base_size=args.baseSize, 
+        quote_size=args.quoteSize,
+        lower_tick=args.lower_tick, # Pass through the tick arguments
+        upper_tick=args.upper_tick   # Pass through the tick arguments
     )
 
     if not ratio_data:
@@ -324,11 +328,11 @@ def main():
 
     if token0_amount != Decimal("0") and token1_amount != Decimal("0"):
         # Calculate price ratios
-        token0_per_token1 = token0_amount / token1_amount
+        token0_per_token1 = token1_amount / token0_amount
         
         print("\nDerived Prices from API ratio:")
-        print(f"  1 {token1_name} = {1/token0_per_token1:.8f} {token0_name}")
         print(f"  1 {token0_name} = {token0_per_token1:.8f} {token1_name}")
+        print(f"  1 {token1_name} = {1/token0_per_token1:.8f} {token0_name}")
     else:
         print("\nCould not derive prices: one of the token amounts from API was zero.", file=sys.stderr)
 
